@@ -1,3 +1,13 @@
+//
+// This file is part of Nexus.
+//
+// Nexus is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 3 or later.
+//
+// Copyright (c) 2026 CitizenCoder
+//
+
 import AppKit
 import SwiftUI
 
@@ -9,6 +19,16 @@ struct PopoverView: View {
 
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
+
+    // Right-click a tile → "Rename & Color…" swaps the grid for this inline form, right there in
+    // the popover, rather than a `.sheet`: a modal sheet presented from inside a `.transient`
+    // `NSPopover` is a known fragile combination (the popover can lose key status to the sheet's
+    // own window and auto-dismiss out from under it). Everything here stays in the popover's own
+    // content view, so there's no second window for it to fight with.
+    @State private var editingSpace: DesktopSpace?
+    @State private var editName = ""
+    @State private var editColorHex: String?
+    @FocusState private var editNameFieldFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -92,17 +112,30 @@ struct PopoverView: View {
                 .padding(.horizontal, 12)
                 .padding(.top, 8)
 
-            if coordinator.spaces.isEmpty {
+            if let editingSpace {
+                editPanel(for: editingSpace)
+            } else if coordinator.spaces.isEmpty {
                 Text(coordinator.accessibilityPermission.isTrusted ? "No desktops found yet." : "Grant Accessibility access in Settings to see your desktops.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
             } else {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 56, maximum: 66), spacing: 10)], spacing: 12) {
-                    ForEach(coordinator.spaces) { space in
-                        DesktopTile(space: space, isBusy: coordinator.isBusy) {
-                            Task { await coordinator.activate(space) }
+                GlassEffectContainer(spacing: 10) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 56, maximum: 66), spacing: 10)], spacing: 12) {
+                        ForEach(coordinator.spaces) { space in
+                            DesktopTile(
+                                space: space,
+                                isBusy: coordinator.isBusy,
+                                thumbnail: coordinator.thumbnailCache.thumbnail(for: space)
+                            ) {
+                                Task { await coordinator.activate(space) }
+                            }
+                            .contextMenu {
+                                Button("Rename & Color…") {
+                                    beginEditing(space)
+                                }
+                            }
                         }
                     }
                 }
@@ -110,6 +143,42 @@ struct PopoverView: View {
             }
         }
         .padding(.bottom, 10)
+    }
+
+    private func beginEditing(_ space: DesktopSpace) {
+        editName = space.customName ?? ""
+        editColorHex = space.accentColorHex
+        editingSpace = space
+    }
+
+    private func editPanel(for space: DesktopSpace) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            TextField("Name", text: $editName)
+                .textFieldStyle(.roundedBorder)
+                .focused($editNameFieldFocused)
+                .onSubmit { commitEdit(for: space) }
+
+            AccentColorPicker(selectedHex: $editColorHex)
+
+            HStack {
+                Spacer()
+                Button("Cancel") { editingSpace = nil }
+                Button("Save") { commitEdit(for: space) }
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 4)
+        .onAppear { editNameFieldFocused = true }
+    }
+
+    private func commitEdit(for space: DesktopSpace) {
+        let name = editName.trimmingCharacters(in: .whitespacesAndNewlines)
+        Task {
+            await coordinator.rename(space, to: name)
+            await coordinator.setAccentColor(editColorHex, for: space)
+        }
+        editingSpace = nil
     }
 
     private var quickActions: some View {
@@ -168,13 +237,21 @@ struct PopoverView: View {
     }
 }
 
-/// One tile in the desktop grid — a colored swatch (the desktop's own accent) with its number,
-/// its name below, and a ring around the active one. Its own view so hover state can be tracked
-/// locally without re-rendering the whole popover on every mouse move. Shared with
-/// `QuickViewPanel`, the hover-triggered floating preview.
+/// One tile in the desktop grid — a colored swatch (the desktop's own accent, as a plain fill;
+/// see the body's comment on why not `Glass.tint(_:)`) wrapped in a real Liquid Glass backing for
+/// its translucent depth and interactive press feedback, showing a cached last-seen screenshot on
+/// top when `DesktopThumbnailCache` has one, with a number badge, name below, and a ring around
+/// the active one. The number always sits in a small scrimmed badge (rather than centered) so it
+/// stays legible over a photo, not just a flat color — kept that way even when there's no
+/// thumbnail yet, so tiles don't jump around as previews fill in one by one. Its own view so hover
+/// state can be tracked locally without re-rendering the whole popover on every mouse move. Shared
+/// with `LandingZoneView`'s grid; both wrap their grid of tiles in a `GlassEffectContainer` so the
+/// tiles' glass panels composite together the way Apple's Liquid Glass guidance recommends for
+/// co-located glass elements, rather than each rendering as an isolated glass layer.
 struct DesktopTile: View {
     let space: DesktopSpace
     let isBusy: Bool
+    var thumbnail: NSImage?
     let action: () -> Void
 
     @State private var isHovering = false
@@ -182,18 +259,36 @@ struct DesktopTile: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(space.accentColor.opacity(space.isActive ? 0.95 : (isHovering ? 0.75 : 0.55)))
-                    .frame(width: 52, height: 40)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .strokeBorder(Color.primary.opacity(space.isActive ? 0.85 : 0), lineWidth: 2)
-                    )
-                    .overlay(
-                        Text("\(space.order + 1)")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.white)
-                    )
+                ZStack(alignment: .topLeading) {
+                    // The desktop's accent color as a plain fill, not `Glass.tint(_:)` — verified
+                    // live that tint doesn't render visibly in this context (an active tile tinted
+                    // at 0.9 opacity showed no color at all), so color identity goes through the
+                    // one rendering path guaranteed to actually show it. `.glassEffect` below still
+                    // wraps this content for the glass backing and interactive press feedback.
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(space.accentColor.opacity(space.isActive ? 0.95 : (isHovering ? 0.55 : 0.28)))
+
+                    if let thumbnail {
+                        Image(nsImage: thumbnail)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .opacity(space.isActive ? 1 : (isHovering ? 0.7 : 0.4))
+                    }
+
+                    Text("\(space.order + 1)")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(4)
+                        .background(.black.opacity(0.35), in: Circle())
+                        .padding(3)
+                }
+                .frame(width: 52, height: 40)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .glassEffect(Glass.regular.interactive(), in: RoundedRectangle(cornerRadius: 10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .strokeBorder(Color.primary.opacity(space.isActive ? 0.85 : 0), lineWidth: 2)
+                )
                 Text(space.displayName)
                     .font(.caption2)
                     .fontWeight(space.isActive ? .bold : .regular)

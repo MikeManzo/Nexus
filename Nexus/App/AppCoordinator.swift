@@ -1,3 +1,13 @@
+//
+// This file is part of Nexus.
+//
+// Nexus is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 3 or later.
+//
+// Copyright (c) 2026 CitizenCoder
+//
+
 import Foundation
 import Observation
 
@@ -21,6 +31,8 @@ final class AppCoordinator {
     let updatePreferences: UpdatePreferences
     let accessibilityPermission: AccessibilityPermissionManager
     let missionControlDiagnostics: MissionControlAccessibilityService
+    let screenRecordingPermission: ScreenRecordingPermissionManager
+    let thumbnailCache: DesktopThumbnailCache
     /// Set by `AppDelegate` once the status item exists — `HotkeyCoordinator` needs an
     /// `openNexus` closure that isn't available until then, so it can't be built in `init`.
     var hotkeyCoordinator: HotkeyCoordinator?
@@ -31,7 +43,9 @@ final class AppCoordinator {
         updateManager: UpdateManaging,
         metadataStore: SpaceMetadataStoring,
         accessibilityPermission: AccessibilityPermissionManager,
-        missionControlDiagnostics: MissionControlAccessibilityService
+        missionControlDiagnostics: MissionControlAccessibilityService,
+        screenRecordingPermission: ScreenRecordingPermissionManager = ScreenRecordingPermissionManager(),
+        thumbnailCache: DesktopThumbnailCache = DesktopThumbnailCache()
     ) {
         self.spaceManager = spaceManager
         self.updateManager = updateManager
@@ -39,6 +53,8 @@ final class AppCoordinator {
         self.metadataStore = metadataStore
         self.accessibilityPermission = accessibilityPermission
         self.missionControlDiagnostics = missionControlDiagnostics
+        self.screenRecordingPermission = screenRecordingPermission
+        self.thumbnailCache = thumbnailCache
     }
 
     var activeSpace: DesktopSpace? {
@@ -77,12 +93,29 @@ final class AppCoordinator {
     func activate(_ space: DesktopSpace) async {
         isBusy = true
         defer { isBusy = false }
+
+        // "Last seen" thumbnails, not live ones — capture the desktop being left right before we
+        // switch away from it (its content won't change again until it's revisited), and the
+        // destination again once we've arrived. See `DesktopThumbnailCache`'s doc comment for why
+        // this is the best that's possible at all. Both are no-ops when the user hasn't opted in
+        // or hasn't granted Screen Recording access.
+        let previewsEnabled = UserDefaults.standard.bool(forKey: DesktopThumbnailCache.enabledDefaultsKey)
+        if !previewsEnabled {
+            Log.thumbnails.notice("Desktop previews toggle is off; skipping captures for this switch")
+        }
+        if previewsEnabled, let leaving = activeSpace, leaving.identifier != space.identifier {
+            await thumbnailCache.captureCurrentScreen(for: leaving)
+        }
+
         do {
             try await spaceManager.activate(space)
             for index in spaces.indices {
                 spaces[index].isActive = (spaces[index].identifier == space.identifier)
             }
             activeSpaceID = space.identifier
+            if previewsEnabled {
+                await thumbnailCache.captureCurrentScreen(for: space)
+            }
         } catch {
             record(error)
         }

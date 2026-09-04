@@ -1,4 +1,15 @@
+//
+// This file is part of Nexus.
+//
+// Nexus is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 3 or later.
+//
+// Copyright (c) 2026 CitizenCoder
+//
+
 import AppKit
+import Observation
 import SwiftUI
 
 /// Owns the `NSStatusItem` and its click-to-open `NSPopover` (the full feature set: create,
@@ -35,6 +46,7 @@ final class StatusItemController: NSObject {
         statusItem.button?.target = self
 
         updateAppearance()
+        observeActiveSpaceChanges()
 
         defaultsObserver = NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification,
@@ -68,6 +80,23 @@ final class StatusItemController: NSObject {
             // — see `SystemSpaceObserver` for the tradeoff this implies.
             updateAppearance()
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        }
+    }
+
+    /// `AppCoordinator` is `@Observable`, but this class isn't a SwiftUI view, so it doesn't get
+    /// automatic re-renders — without this, editing a desktop's name or accent color (via the
+    /// popover's right-click "Rename & Color…") wouldn't reach the status item's own button until
+    /// the *next* popover open/close cycle happened to call `updateAppearance()` again. This
+    /// tracks `activeSpace` (name, order, and accent all live under it) via the Observation
+    /// framework directly, and re-registers itself after every change since tracking is one-shot.
+    private func observeActiveSpaceChanges() {
+        withObservationTracking {
+            _ = coordinator.activeSpace
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                self?.updateAppearance()
+                self?.observeActiveSpaceChanges()
+            }
         }
     }
 

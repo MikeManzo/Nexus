@@ -1,3 +1,13 @@
+//
+// This file is part of Nexus.
+//
+// Nexus is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 3 or later.
+//
+// Copyright (c) 2026 CitizenCoder
+//
+
 import Foundation
 
 /// Tier 3 `SpaceManaging`: reads and switches spaces via the private `CGSCopyManagedDisplaySpaces`
@@ -21,7 +31,10 @@ import Foundation
 @MainActor
 final class ExperimentalSpaceManager: SpaceManaging {
     private let fallback: AccessibilitySpaceManager
-    private var lastKnownSpaces: [DesktopSpace] = []
+    // Seeded from disk rather than starting empty — see `SpaceReconciler`'s "Cross-launch
+    // snapshot" section for why an empty starting point here breaks custom name/color persistence
+    // across app relaunches.
+    private var lastKnownSpaces: [DesktopSpace] = SpaceReconciler.loadSnapshot()
 
     init(fallback: AccessibilitySpaceManager = AccessibilitySpaceManager()) {
         self.fallback = fallback
@@ -34,6 +47,7 @@ final class ExperimentalSpaceManager: SpaceManaging {
         }
         let reconciled = SpaceReconciler.reconcile(previous: lastKnownSpaces, observed: observed)
         lastKnownSpaces = reconciled
+        SpaceReconciler.saveSnapshot(reconciled)
         return reconciled
     }
 

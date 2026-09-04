@@ -1,3 +1,13 @@
+//
+// This file is part of Nexus.
+//
+// Nexus is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 3 or later.
+//
+// Copyright (c) 2026 CitizenCoder
+//
+
 import AppKit
 import ApplicationServices
 import Foundation
@@ -38,7 +48,10 @@ extension Notification.Name {
 /// `docs/01-capability-research.md` §12.
 @MainActor
 final class AccessibilitySpaceManager: SpaceManaging {
-    private var lastKnownSpaces: [DesktopSpace] = []
+    // Seeded from disk rather than starting empty — see `SpaceReconciler`'s "Cross-launch
+    // snapshot" section for why an empty starting point here breaks custom name/color persistence
+    // across app relaunches.
+    private var lastKnownSpaces: [DesktopSpace] = SpaceReconciler.loadSnapshot()
 
     func spaces() async throws -> [DesktopSpace] {
         try await withMissionControlPresented { axApp in
@@ -176,6 +189,7 @@ final class AccessibilitySpaceManager: SpaceManaging {
 
         let reconciled = SpaceReconciler.reconcile(previous: lastKnownSpaces, observed: observations)
         lastKnownSpaces = reconciled
+        SpaceReconciler.saveSnapshot(reconciled)
         Log.spaceManager.info("Observed \(reconciled.count, privacy: .public) spaces via Accessibility")
         return reconciled
     }

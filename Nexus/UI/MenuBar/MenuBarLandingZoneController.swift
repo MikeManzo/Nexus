@@ -1,3 +1,13 @@
+//
+// This file is part of Nexus.
+//
+// Nexus is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 3 or later.
+//
+// Copyright (c) 2026 CitizenCoder
+//
+
 import AppKit
 import SwiftUI
 
@@ -120,13 +130,36 @@ final class MenuBarLandingZoneController {
     }
 
     /// Pins the *top* edge to the very top of the screen — flush with the menu bar's own top
-    /// edge, not sitting below it — and grows downward from there, centered horizontally. The
-    /// collapsed pill's height is close to the menu bar's own thickness, so it reads as occupying
-    /// the menu bar row itself; the expanded grid then hangs below it like a real dropdown would.
+    /// edge, not sitting below it — and grows downward from there. The collapsed pill's height is
+    /// exactly the menu bar's own thickness (`LandingZoneView.menuBarHeight`), so its content
+    /// lands vertically centered against the native menu bar's own items rather than pinned to
+    /// the top of the row; the expanded grid then hangs below it like a real dropdown would,
+    /// starting right where the real menu bar ends.
     private func position(_ panel: NSPanel, size: NSSize) {
         guard let screen = NSScreen.screens.first else { return }
-        let x = screen.frame.midX - size.width / 2
+        let x = horizontalOrigin(on: screen, panelWidth: size.width)
         let y = screen.frame.maxY - size.height
         panel.setFrame(NSRect(x: x, y: y, width: size.width, height: size.height), display: true)
+    }
+
+    /// `screen.frame.midX` is the screen's true horizontal center — on a notched MacBook that's
+    /// exactly where the camera housing is, so a panel centered there would sit partly behind it.
+    /// `NSScreen.safeAreaInsets.top > 0` is how AppKit signals a notch is present; when it is,
+    /// this centers instead within whichever of `auxiliaryTopLeftArea`/`auxiliaryTopRightArea`
+    /// (the unobscured strips macOS itself defines to the notch's left and right) is wide enough
+    /// to hold the panel, clamped into that strip if the panel doesn't fit.
+    ///
+    /// Verified against the notch-free 2560×1440 external display this was built and tested on
+    /// (`safeAreaInsets == .zero` there, so this always takes the plain-midpoint path); not yet
+    /// tested on real notched hardware.
+    private func horizontalOrigin(on screen: NSScreen, panelWidth: CGFloat) -> CGFloat {
+        guard screen.safeAreaInsets.top > 0 else {
+            return screen.frame.midX - panelWidth / 2
+        }
+        let sides = [screen.auxiliaryTopRightArea, screen.auxiliaryTopLeftArea].compactMap { $0 }.filter { !$0.isEmpty }
+        guard let side = sides.first(where: { $0.width >= panelWidth }) ?? sides.max(by: { $0.width < $1.width }) else {
+            return screen.frame.midX - panelWidth / 2
+        }
+        return panelWidth >= side.width ? side.minX : side.midX - panelWidth / 2
     }
 }

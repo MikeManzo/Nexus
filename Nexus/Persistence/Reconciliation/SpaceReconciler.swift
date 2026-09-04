@@ -1,3 +1,13 @@
+//
+// This file is part of Nexus.
+//
+// Nexus is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 3 or later.
+//
+// Copyright (c) 2026 CitizenCoder
+//
+
 import Foundation
 
 /// Assigns stable `stableKey`s to freshly observed spaces by matching them against the last known
@@ -70,5 +80,51 @@ enum SpaceReconciler {
         updated.systemLabel = observation.systemLabel
         updated.displayID = observation.displayID
         return updated
+    }
+
+    // MARK: - Cross-launch snapshot
+
+    // Without this, `previous` is always `[]` on the very first `reconcile` call after a fresh
+    // launch (both backends' `lastKnownSpaces` start empty), so every space falls through to the
+    // "newly created" branch above and gets a brand-new random `stableKey` — meaning
+    // `SpaceMetadataStore`'s saved names/colors, keyed by the *old* stableKey, would never be
+    // found again after quitting and relaunching Nexus, even though that file itself persists
+    // correctly. Persisting the last reconciled snapshot here and loading it as `previous` for a
+    // backend's first call after launch lets rule 2/3 (label/order matching) recover the same
+    // stableKeys, so metadata lookups keep hitting. Both `AccessibilitySpaceManager` and
+    // `ExperimentalSpaceManager` share this one file — reconciliation only ever matches by
+    // label/order/token regardless of which backend wrote it, so this is safe even if the user
+    // switches backends between launches.
+
+    static func loadSnapshot() -> [DesktopSpace] {
+        guard let data = try? Data(contentsOf: snapshotURL()),
+              let decoded = try? JSONDecoder().decode([DesktopSpace].self, from: data)
+        else {
+            return []
+        }
+        return decoded
+    }
+
+    static func saveSnapshot(_ spaces: [DesktopSpace]) {
+        guard let data = try? JSONEncoder().encode(spaces) else {
+            Log.persistence.error("Failed to encode space reconciliation snapshot")
+            return
+        }
+        do {
+            try FileManager.default.createDirectory(
+                at: snapshotURL().deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try data.write(to: snapshotURL(), options: .atomic)
+        } catch {
+            Log.persistence.error("Failed to write space reconciliation snapshot: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private static func snapshotURL() -> URL {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        return base
+            .appendingPathComponent("Nexus", isDirectory: true)
+            .appendingPathComponent("space-reconciliation-snapshot.json")
     }
 }

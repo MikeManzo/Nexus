@@ -1,3 +1,13 @@
+//
+// This file is part of Nexus.
+//
+// Nexus is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 3 or later.
+//
+// Copyright (c) 2026 CitizenCoder
+//
+
 import Foundation
 
 /// A single macOS desktop/Space, as understood by Nexus.
@@ -6,7 +16,7 @@ import Foundation
 /// concept of a user-assigned Space name at all, so `customName` is always Nexus-owned metadata
 /// layered on top, never a value read from or written to the system. See
 /// `docs/01-capability-research.md` for why.
-struct DesktopSpace: Identifiable, Hashable, Sendable {
+struct DesktopSpace: Identifiable, Hashable, Sendable, Codable {
     var id: SpaceIdentifier { identifier }
 
     let identifier: SpaceIdentifier
