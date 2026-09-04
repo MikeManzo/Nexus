@@ -20,77 +20,70 @@ struct ShortcutsSettingsView: View {
     }
 
     private func content(_ hotkeys: HotkeyCoordinator) -> some View {
-        ScrollView {
         Form {
-            ForEach(HotkeyAction.orderedForDisplay, id: \.self) { action in
-                if let binding = hotkeys.bindings[action] {
-                    HStack {
-                        Toggle(isOn: Binding(
-                            get: { binding.isEnabled },
-                            set: { hotkeys.setEnabled($0, for: action) }
-                        )) {
-                            Text(action.label)
-                        }
-                        Spacer()
-                        ShortcutRecorderView(currentShortcut: binding.shortcut) { newShortcut in
-                            if hotkeys.setShortcut(newShortcut, for: action) {
-                                conflictMessage = nil
-                            } else {
-                                let conflict = hotkeys.conflictingAction(for: newShortcut, excluding: action)
-                                conflictMessage = "\(newShortcut.displayString) is already used by \(conflict?.label ?? "another action")."
+            Section("Global Shortcuts") {
+                ForEach(HotkeyAction.orderedForDisplay, id: \.self) { action in
+                    if let binding = hotkeys.bindings[action] {
+                        HStack {
+                            Toggle(isOn: Binding(
+                                get: { binding.isEnabled },
+                                set: { hotkeys.setEnabled($0, for: action) }
+                            )) {
+                                Text(action.label)
                             }
+                            Spacer()
+                            ShortcutRecorderView(currentShortcut: binding.shortcut) { newShortcut in
+                                if hotkeys.setShortcut(newShortcut, for: action) {
+                                    conflictMessage = nil
+                                } else {
+                                    let conflict = hotkeys.conflictingAction(for: newShortcut, excluding: action)
+                                    conflictMessage = "\(newShortcut.displayString) is already used by \(conflict?.label ?? "another action")."
+                                }
+                            }
+                            .disabled(!binding.isEnabled)
                         }
-                        .disabled(!binding.isEnabled)
                     }
                 }
-            }
 
-            if let conflictMessage {
-                Text(conflictMessage).font(.caption).foregroundStyle(.red)
-            }
-
-            Text("Shortcuts work even when Nexus isn't the active app.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Divider()
-
-            flashFreeSection
-        }
-        .padding(20)
-        }
-    }
-
-    private var flashFreeSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Flash-free switching").font(.subheadline.bold())
-            Text("Assigns macOS's own built-in \"Switch to Desktop N\" shortcut (Control+1, Control+2, …) for your first \(SystemShortcutConfigurator.maxSupportedDesktops) desktops, so switching never flashes Mission Control — the same mechanism you set up manually for Desktop 1, applied to the rest. Never overwrites a shortcut already in use for something else. Once enabled, new desktops you create get one automatically.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            HStack {
-                Button("Enable for All Desktops") {
-                    enableForAllDesktops()
+                if let conflictMessage {
+                    Text(conflictMessage).font(.caption).foregroundStyle(.red)
                 }
-                if !autoAssignedSlots.isEmpty {
-                    Button("Remove Auto-Configured Shortcuts") {
-                        SystemShortcutConfigurator.removeAutoAssignedShortcuts()
-                        SystemShortcutConfigurator.isEnabled = false
-                        autoAssignedSlots = SystemShortcutConfigurator.autoAssignedSlots()
-                        flashFreeStatus = "Removed."
-                    }
-                }
-            }
 
-            if !autoAssignedSlots.isEmpty {
-                Text("Nexus-configured: Desktop \(autoAssignedSlots.sorted().map { "\($0 + 1)" }.joined(separator: ", "))")
+                Text("Shortcuts work even when Nexus isn't the active app.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            if let flashFreeStatus {
-                Text(flashFreeStatus).font(.caption).foregroundStyle(.secondary)
+
+            Section("Flash-Free Switching") {
+                Text("Assigns macOS's own built-in \"Switch to Desktop N\" shortcut (Control+1, Control+2, …) for your first \(SystemShortcutConfigurator.maxSupportedDesktops) desktops, so switching never flashes Mission Control — the same mechanism you set up manually for Desktop 1, applied to the rest. Never overwrites a shortcut already in use for something else. Once enabled, new desktops you create get one automatically.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                HStack {
+                    Button("Enable for All Desktops") {
+                        enableForAllDesktops()
+                    }
+                    if !autoAssignedSlots.isEmpty {
+                        Button("Remove Auto-Configured Shortcuts") {
+                            SystemShortcutConfigurator.removeAutoAssignedShortcuts()
+                            SystemShortcutConfigurator.isEnabled = false
+                            autoAssignedSlots = SystemShortcutConfigurator.autoAssignedSlots()
+                            flashFreeStatus = "Removed."
+                        }
+                    }
+                }
+
+                if !autoAssignedSlots.isEmpty {
+                    Text("Nexus-configured: Desktop \(autoAssignedSlots.sorted().map { "\($0 + 1)" }.joined(separator: ", "))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if let flashFreeStatus {
+                    Text(flashFreeStatus).font(.caption).foregroundStyle(.secondary)
+                }
             }
         }
+        .formStyle(.grouped)
     }
 
     private func enableForAllDesktops() {

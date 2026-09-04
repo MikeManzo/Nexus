@@ -9,30 +9,30 @@ struct AccessibilitySettingsView: View {
     @State private var isRunningDiagnostic = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            statusRow
+        Form {
+            Section("Permission") {
+                statusRow
 
-            Text("Nexus uses Accessibility access to read and control Mission Control — switching, creating, and deleting desktops. It does not log keystrokes, read other apps' content, or send anything over the network. Renaming and the rest of the app work without this permission.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                Text("Nexus uses Accessibility access to read and control Mission Control — switching, creating, and deleting desktops. It does not log keystrokes, read other apps' content, or send anything over the network. Renaming and the rest of the app work without this permission.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
 
-            HStack {
-                if !coordinator.accessibilityPermission.isTrusted {
-                    Button("Grant Access…") {
-                        coordinator.accessibilityPermission.requestPermission()
+                HStack {
+                    if !coordinator.accessibilityPermission.isTrusted {
+                        Button("Grant Access…") {
+                            coordinator.accessibilityPermission.requestPermission()
+                        }
                     }
-                }
-                Button("Open System Settings…") {
-                    coordinator.accessibilityPermission.openSystemSettings()
-                }
-                Button("Recheck Permission") {
-                    coordinator.accessibilityPermission.refresh()
+                    Button("Open System Settings…") {
+                        coordinator.accessibilityPermission.openSystemSettings()
+                    }
+                    Button("Recheck Permission") {
+                        coordinator.accessibilityPermission.refresh()
+                    }
                 }
             }
 
-            Divider()
-
-            VStack(alignment: .leading, spacing: 8) {
+            Section("Connection") {
                 Button("Test Accessibility Connection") {
                     runConnectionTest()
                 }
@@ -42,11 +42,8 @@ struct AccessibilitySettingsView: View {
                 }
             }
 
-            Divider()
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Research diagnostic").font(.headline)
-                Text("Briefly opens Mission Control to capture its accessibility structure — this is Phase 4 groundwork for building real desktop switching, not something you need to run day to day.")
+            Section("Developer Diagnostics") {
+                Text("Briefly opens Mission Control to capture its accessibility structure — this is groundwork for building real desktop switching, not something you need to run day to day.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -66,10 +63,8 @@ struct AccessibilitySettingsView: View {
                     Text(diagnosticStatus).font(.caption).foregroundStyle(.secondary)
                 }
             }
-
-            Spacer()
         }
-        .padding(20)
+        .formStyle(.grouped)
         .onAppear { coordinator.accessibilityPermission.refresh() }
     }
 

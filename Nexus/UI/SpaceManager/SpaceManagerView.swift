@@ -1,11 +1,13 @@
 import SwiftUI
 
-/// The full desktop-management window: rename, delete, create, and (via double-click) switch.
+/// The full desktop-management window: customize (name + accent color), delete, create, and
+/// (via double-click) switch.
 struct SpaceManagerView: View {
     let coordinator: AppCoordinator
 
     @State private var renamingSpace: DesktopSpace?
     @State private var renameText = ""
+    @State private var customizeColorHex: String?
     @State private var pendingDeletion: DesktopSpace?
 
     var body: some View {
@@ -14,6 +16,7 @@ struct SpaceManagerView: View {
             List {
                 ForEach(coordinator.spaces) { space in
                     row(for: space)
+                        .listRowInsets(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
                 }
             }
             .listStyle(.inset)
@@ -32,10 +35,10 @@ struct SpaceManagerView: View {
             }
             .padding(12)
         }
-        .frame(minWidth: 420, minHeight: 480)
+        .frame(minWidth: 440, minHeight: 480)
         .task { await coordinator.refresh() }
         .sheet(item: $renamingSpace) { space in
-            renameSheet(for: space)
+            customizeSheet(for: space)
         }
         .confirmationDialog(
             "Delete “\(pendingDeletion?.displayName ?? "")”?",
@@ -71,10 +74,17 @@ struct SpaceManagerView: View {
 
     private func row(for space: DesktopSpace) -> some View {
         HStack(spacing: 12) {
-            Circle()
-                .strokeBorder(Color.secondary.opacity(0.4), lineWidth: 1)
-                .background(Circle().fill(space.isActive ? Color.accentColor : .clear))
-                .frame(width: 16, height: 16)
+            ZStack {
+                if space.isActive {
+                    Circle()
+                        .strokeBorder(space.accentColor, lineWidth: 2)
+                        .frame(width: 22, height: 22)
+                }
+                Circle()
+                    .fill(space.accentColor)
+                    .frame(width: 14, height: 14)
+            }
+            .frame(width: 22, height: 22)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(space.displayName).font(.body.weight(.medium))
@@ -83,12 +93,13 @@ struct SpaceManagerView: View {
 
             Spacer()
 
-            Button("Rename") {
+            Button("Customize…") {
                 renameText = space.customName ?? ""
+                customizeColorHex = space.accentColorHex
                 renamingSpace = space
             }
             .buttonStyle(.link)
-            .accessibilityLabel("Rename \(space.displayName)")
+            .accessibilityLabel("Customize \(space.displayName)")
 
             Button("Delete") {
                 pendingDeletion = space
@@ -98,8 +109,13 @@ struct SpaceManagerView: View {
             .disabled(coordinator.spaces.count <= 1)
             .accessibilityLabel("Delete \(space.displayName)")
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 6)
         .contentShape(Rectangle())
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(space.isActive ? space.accentColor.opacity(0.12) : Color.clear)
+        )
         .accessibilityElement(children: .contain)
         .accessibilityLabel(space.isActive ? "\(space.displayName), current desktop" : space.displayName)
         .accessibilityHint("Double-click to switch to this desktop")
@@ -109,26 +125,35 @@ struct SpaceManagerView: View {
         }
     }
 
-    private func renameSheet(for space: DesktopSpace) -> some View {
+    private func customizeSheet(for space: DesktopSpace) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Rename Desktop").font(.headline)
+            Text("Customize Desktop").font(.headline)
             TextField("Name", text: $renameText)
                 .textFieldStyle(.roundedBorder)
-                .onSubmit { commitRename(for: space) }
+                .onSubmit { commitCustomize(for: space) }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Accent color").font(.caption).foregroundStyle(.secondary)
+                AccentColorPicker(selectedHex: $customizeColorHex)
+            }
+
             HStack {
                 Spacer()
                 Button("Cancel") { renamingSpace = nil }
-                Button("Save") { commitRename(for: space) }
+                Button("Save") { commitCustomize(for: space) }
                     .keyboardShortcut(.defaultAction)
             }
         }
         .padding(20)
-        .frame(width: 320)
+        .frame(width: 340)
     }
 
-    private func commitRename(for space: DesktopSpace) {
+    private func commitCustomize(for space: DesktopSpace) {
         let name = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
-        Task { await coordinator.rename(space, to: name) }
+        Task {
+            await coordinator.rename(space, to: name)
+            await coordinator.setAccentColor(customizeColorHex, for: space)
+        }
         renamingSpace = nil
     }
 

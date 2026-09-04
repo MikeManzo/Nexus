@@ -46,6 +46,19 @@ struct SpaceMetadataStoreTests {
         #expect(metadata == nil)
     }
 
+    @Test("Setting an accent color round-trips through the store, independent of the name")
+    func setAndReadAccentColor() async {
+        let store = makeStore()
+        let key = UUID()
+
+        await store.setCustomName("Work", for: key)
+        await store.setAccentColor("#FF6A38", for: key)
+        let metadata = await store.metadata(for: key)
+
+        #expect(metadata?.customName == "Work")
+        #expect(metadata?.accentColorHex == "#FF6A38")
+    }
+
     @Test("Metadata persists across separate store instances reading the same file")
     func persistsAcrossInstances() async {
         let tempURL = FileManager.default.temporaryDirectory

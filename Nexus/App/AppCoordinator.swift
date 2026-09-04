@@ -53,6 +53,7 @@ final class AppCoordinator {
                 guard let entry = metadata[fetched[index].identifier.stableKey] else { continue }
                 fetched[index].customName = entry.customName
                 fetched[index].symbolName = entry.symbolName
+                fetched[index].accentColorHex = entry.accentColorHex
             }
             spaces = fetched.sorted { $0.order < $1.order }
             // Derived from the same fetch rather than a separate `activeSpace()` call: the real
@@ -128,6 +129,13 @@ final class AppCoordinator {
         if let index = spaces.firstIndex(where: { $0.identifier == space.identifier }) {
             let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
             spaces[index].customName = trimmed.isEmpty ? nil : trimmed
+        }
+    }
+
+    func setAccentColor(_ hex: String?, for space: DesktopSpace) async {
+        await metadataStore.setAccentColor(hex, for: space.identifier.stableKey)
+        if let index = spaces.firstIndex(where: { $0.identifier == space.identifier }) {
+            spaces[index].accentColorHex = hex
         }
     }
 

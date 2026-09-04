@@ -5,13 +5,15 @@ struct MenuBarSettingsView: View {
 
     var body: some View {
         Form {
-            Picker("Menu bar style", selection: $displayModeRaw) {
-                ForEach(MenuBarDisplayMode.allCases) { mode in
-                    Text(mode.label).tag(mode.rawValue)
+            Section("Display") {
+                Picker("Menu bar style", selection: $displayModeRaw) {
+                    ForEach(MenuBarDisplayMode.allCases) { mode in
+                        Text(mode.label).tag(mode.rawValue)
+                    }
                 }
+                .pickerStyle(.radioGroup)
             }
-            .pickerStyle(.radioGroup)
         }
-        .padding(20)
+        .formStyle(.grouped)
     }
 }

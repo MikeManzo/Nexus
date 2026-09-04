@@ -4,6 +4,7 @@ protocol SpaceMetadataStoring: Sendable {
     func metadata(for key: UUID) async -> SpaceMetadata?
     func allMetadata() async -> [UUID: SpaceMetadata]
     func setCustomName(_ name: String?, for key: UUID) async
+    func setAccentColor(_ hex: String?, for key: UUID) async
     func removeMetadata(for key: UUID) async
 }
 
@@ -33,6 +34,14 @@ actor SpaceMetadataStore: SpaceMetadataStoring {
         storage[key] = entry
         persist()
         Log.persistence.info("Updated metadata for space \(key.uuidString, privacy: .public)")
+    }
+
+    func setAccentColor(_ hex: String?, for key: UUID) {
+        var entry = storage[key] ?? SpaceMetadata(stableKey: key, customName: nil, symbolName: nil, accentColorHex: nil, createdAt: Date())
+        entry.accentColorHex = hex
+        storage[key] = entry
+        persist()
+        Log.persistence.info("Updated accent color for space \(key.uuidString, privacy: .public)")
     }
 
     func removeMetadata(for key: UUID) {

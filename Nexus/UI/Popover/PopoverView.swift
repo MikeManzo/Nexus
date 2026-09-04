@@ -62,7 +62,7 @@ struct PopoverView: View {
 
             if let active = coordinator.activeSpace {
                 HStack(spacing: 8) {
-                    Circle().fill(Color.accentColor).frame(width: 8, height: 8)
+                    Circle().fill(active.accentColor).frame(width: 9, height: 9)
                     Text(active.displayName).font(.headline)
                 }
                 Text("Desktop \(active.order + 1) of \(coordinator.spaces.count)")
@@ -75,6 +75,13 @@ struct PopoverView: View {
             }
         }
         .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(headerTint)
+    }
+
+    private var headerTint: some View {
+        (coordinator.activeSpace?.accentColor ?? Color.accentColor)
+            .opacity(0.08)
     }
 
     private var desktopList: some View {
@@ -94,30 +101,10 @@ struct PopoverView: View {
             }
 
             ForEach(coordinator.spaces) { space in
-                Button {
+                DesktopRow(space: space, isBusy: coordinator.isBusy) {
                     Task { await coordinator.activate(space) }
-                } label: {
-                    HStack {
-                        Circle()
-                            .fill(space.isActive ? Color.accentColor : Color.clear)
-                            .frame(width: 6, height: 6)
-                        Text(space.displayName)
-                        Spacer()
-                        if space.order < 9 {
-                            Text("⌘\(space.order + 1)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
-                .disabled(coordinator.isBusy)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 4)
-                .accessibilityLabel(space.isActive ? "\(space.displayName), current desktop" : space.displayName)
-                .accessibilityHint("Switches to this desktop")
-                .accessibilityAddTraits(space.isActive ? [.isSelected] : [])
+                .padding(.horizontal, 8)
             }
         }
         .padding(.bottom, 6)
@@ -176,5 +163,49 @@ struct PopoverView: View {
             .padding(.vertical, 6)
         }
         .padding(.bottom, 6)
+    }
+}
+
+/// One row in the desktop list — its own view so hover state can be tracked locally without
+/// re-rendering the whole popover on every mouse move.
+private struct DesktopRow: View {
+    let space: DesktopSpace
+    let isBusy: Bool
+    let action: () -> Void
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(space.accentColor)
+                    .frame(width: 8, height: 8)
+                Text(space.displayName)
+                    .fontWeight(space.isActive ? .semibold : .regular)
+                Spacer()
+                if space.order < 9 {
+                    Text("⌘\(space.order + 1)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(RoundedRectangle(cornerRadius: 6).fill(rowBackground))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isBusy)
+        .onHover { isHovering = $0 }
+        .accessibilityLabel(space.isActive ? "\(space.displayName), current desktop" : space.displayName)
+        .accessibilityHint("Switches to this desktop")
+        .accessibilityAddTraits(space.isActive ? [.isSelected] : [])
+    }
+
+    private var rowBackground: Color {
+        if space.isActive { return space.accentColor.opacity(0.14) }
+        if isHovering { return Color.primary.opacity(0.06) }
+        return .clear
     }
 }

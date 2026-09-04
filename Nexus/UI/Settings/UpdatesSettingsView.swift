@@ -5,17 +5,25 @@ struct UpdatesSettingsView: View {
 
     var body: some View {
         Form {
-            LabeledContent("Installed version", value: preferences.installedVersion)
-            Toggle("Automatically check for updates", isOn: $preferences.automaticallyChecksForUpdates)
-            Toggle("Automatically download updates", isOn: $preferences.automaticallyDownloadsUpdates)
-                .disabled(!preferences.automaticallyChecksForUpdates)
-            LabeledContent("Last checked", value: lastCheckedText)
-            Button("Check for Updates…") {
-                preferences.checkForUpdates()
+            Section("Version") {
+                LabeledContent("Installed version", value: preferences.installedVersion)
+                LabeledContent("Last checked", value: lastCheckedText)
             }
-            .disabled(!preferences.canCheckForUpdates)
+
+            Section("Automatic Updates") {
+                Toggle("Automatically check for updates", isOn: $preferences.automaticallyChecksForUpdates)
+                Toggle("Automatically download updates", isOn: $preferences.automaticallyDownloadsUpdates)
+                    .disabled(!preferences.automaticallyChecksForUpdates)
+            }
+
+            Section {
+                Button("Check for Updates…") {
+                    preferences.checkForUpdates()
+                }
+                .disabled(!preferences.canCheckForUpdates)
+            }
         }
-        .padding(20)
+        .formStyle(.grouped)
     }
 
     private var lastCheckedText: String {

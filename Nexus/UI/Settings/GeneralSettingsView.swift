@@ -8,20 +8,27 @@ struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
-            Toggle("Launch at login", isOn: $launchAtLogin)
-                .onChange(of: launchAtLogin) { _, newValue in
-                    updateLaunchAtLogin(newValue)
-                }
-            Toggle("Show in Dock", isOn: $showInDock)
-                .onChange(of: showInDock) { _, newValue in
-                    NSApp.setActivationPolicy(newValue ? .regular : .accessory)
-                }
+            Section("Startup") {
+                Toggle("Launch at login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, newValue in
+                        updateLaunchAtLogin(newValue)
+                    }
+            }
 
-            Button("Show Welcome Screen…") {
-                (NSApp.delegate as? AppDelegate)?.presentOnboarding()
+            Section("Appearance") {
+                Toggle("Show in Dock", isOn: $showInDock)
+                    .onChange(of: showInDock) { _, newValue in
+                        NSApp.setActivationPolicy(newValue ? .regular : .accessory)
+                    }
+            }
+
+            Section {
+                Button("Show Welcome Screen…") {
+                    (NSApp.delegate as? AppDelegate)?.presentOnboarding()
+                }
             }
         }
-        .padding(20)
+        .formStyle(.grouped)
     }
 
     private func updateLaunchAtLogin(_ enabled: Bool) {
