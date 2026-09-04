@@ -11,6 +11,10 @@ final class AppCoordinator {
     private(set) var spaces: [DesktopSpace] = []
     private(set) var activeSpaceID: SpaceIdentifier?
     var lastError: SpaceError?
+    /// True while `activate`/`createSpace`/`delete` are in flight — these can take a second or
+    /// two against the real backend (Mission Control's animation, or a synthesized keystroke's
+    /// settle time), so views use this to show that a click registered rather than looking inert.
+    private(set) var isBusy = false
 
     let spaceManager: SpaceManaging
     let updateManager: UpdateManaging
@@ -70,6 +74,8 @@ final class AppCoordinator {
     // opens — see `StatusItemController`/`SystemSpaceObserver`).
 
     func activate(_ space: DesktopSpace) async {
+        isBusy = true
+        defer { isBusy = false }
         do {
             try await spaceManager.activate(space)
             for index in spaces.indices {
@@ -82,6 +88,8 @@ final class AppCoordinator {
     }
 
     func createSpace() async {
+        isBusy = true
+        defer { isBusy = false }
         do {
             let created = try await spaceManager.createSpace()
             spaces.append(created)
@@ -92,7 +100,7 @@ final class AppCoordinator {
             // — otherwise every new desktop would silently fall back to flashing until the user
             // remembered to revisit Settings and click the button again.
             if SystemShortcutConfigurator.isEnabled {
-                try? SystemShortcutConfigurator.ensureShortcut(forSlot: created.order)
+                _ = try? SystemShortcutConfigurator.ensureShortcut(forSlot: created.order)
             }
         } catch {
             record(error)
@@ -100,6 +108,8 @@ final class AppCoordinator {
     }
 
     func delete(_ space: DesktopSpace) async {
+        isBusy = true
+        defer { isBusy = false }
         do {
             try await spaceManager.delete(space)
             await metadataStore.removeMetadata(for: space.identifier.stableKey)

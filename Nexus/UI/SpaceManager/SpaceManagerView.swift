@@ -17,11 +17,18 @@ struct SpaceManagerView: View {
                 }
             }
             .listStyle(.inset)
+            .disabled(coordinator.isBusy)
             Divider()
-            Button {
-                Task { await coordinator.createSpace() }
-            } label: {
-                Label("Create Desktop", systemImage: "plus")
+            HStack {
+                Button {
+                    Task { await coordinator.createSpace() }
+                } label: {
+                    Label("Create Desktop", systemImage: "plus")
+                }
+                .disabled(coordinator.isBusy)
+                if coordinator.isBusy {
+                    ProgressView().controlSize(.small)
+                }
             }
             .padding(12)
         }
@@ -97,6 +104,7 @@ struct SpaceManagerView: View {
         .accessibilityLabel(space.isActive ? "\(space.displayName), current desktop" : space.displayName)
         .accessibilityHint("Double-click to switch to this desktop")
         .onTapGesture(count: 2) {
+            guard !coordinator.isBusy else { return }
             Task { await coordinator.activate(space) }
         }
     }

@@ -49,9 +49,16 @@ struct PopoverView: View {
 
     private var currentSpaceHeader: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("CURRENT SPACE")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+            HStack(spacing: 6) {
+                Text("CURRENT SPACE")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                if coordinator.isBusy {
+                    ProgressView()
+                        .controlSize(.small)
+                        .scaleEffect(0.6)
+                }
+            }
 
             if let active = coordinator.activeSpace {
                 HStack(spacing: 8) {
@@ -105,6 +112,7 @@ struct PopoverView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(coordinator.isBusy)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 4)
                 .accessibilityLabel(space.isActive ? "\(space.displayName), current desktop" : space.displayName)
@@ -123,6 +131,7 @@ struct PopoverView: View {
                 Label("New Desktop", systemImage: "plus")
             }
             .buttonStyle(.plain)
+            .disabled(coordinator.isBusy)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .accessibilityHint("Creates a new desktop")
