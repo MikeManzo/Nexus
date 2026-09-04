@@ -170,8 +170,9 @@ struct PopoverView: View {
 
 /// One tile in the desktop grid — a colored swatch (the desktop's own accent) with its number,
 /// its name below, and a ring around the active one. Its own view so hover state can be tracked
-/// locally without re-rendering the whole popover on every mouse move.
-private struct DesktopTile: View {
+/// locally without re-rendering the whole popover on every mouse move. Shared with
+/// `QuickViewPanel`, the hover-triggered floating preview.
+struct DesktopTile: View {
     let space: DesktopSpace
     let isBusy: Bool
     let action: () -> Void

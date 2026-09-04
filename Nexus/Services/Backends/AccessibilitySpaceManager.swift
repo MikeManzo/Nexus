@@ -2,6 +2,17 @@ import AppKit
 import ApplicationServices
 import Foundation
 
+extension Notification.Name {
+    /// Posted immediately before Mission Control is invoked, and again once it's been dismissed
+    /// — `MenuBarLandingZoneController` listens for these to hide/restore itself. The landing
+    /// zone panel is pinned to the exact top-of-screen region and floats at `.statusBar` level;
+    /// left up while Mission Control tries to present its own Spaces Bar there, it interfered
+    /// with Dock.app's AX tree enough to make `mc.spaces.list` lookups fail — confirmed live, not
+    /// theoretical.
+    static let missionControlWillPresent = Notification.Name("com.nexusapp.Nexus.missionControlWillPresent")
+    static let missionControlDidDismiss = Notification.Name("com.nexusapp.Nexus.missionControlDidDismiss")
+}
+
 /// Tier 2 `SpaceManaging`: drives Mission Control's accessibility tree. Built against the
 /// verified structure captured by `MissionControlAccessibilityService`'s diagnostic dumps
 /// (`~/Library/Application Support/Nexus/diagnostics/`), not guessed role/subrole names — see
@@ -122,6 +133,10 @@ final class AccessibilitySpaceManager: SpaceManaging {
         } catch {
             throw SpaceError.missionControlUnavailable
         }
+
+        NotificationCenter.default.post(name: .missionControlWillPresent, object: nil)
+        defer { NotificationCenter.default.post(name: .missionControlDidDismiss, object: nil) }
+
         try await Task.sleep(for: .milliseconds(700))
 
         let result: T

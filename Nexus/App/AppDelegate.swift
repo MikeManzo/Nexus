@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     )
 
     private var statusItemController: StatusItemController?
+    private var landingZoneController: MenuBarLandingZoneController?
     private var spaceObserver: SystemSpaceObserver?
     private var onboardingWindowController: OnboardingWindowController?
 
@@ -32,6 +33,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
         let statusItem = StatusItemController(coordinator: coordinator)
         statusItemController = statusItem
+        // Manages its own visibility from Settings → Menu Bar → "Show quick switcher in menu
+        // bar" (off by default) — nothing to call here.
+        landingZoneController = MenuBarLandingZoneController(coordinator: coordinator)
         spaceObserver = SystemSpaceObserver()
         coordinator.hotkeyCoordinator = HotkeyCoordinator(
             appCoordinator: coordinator,

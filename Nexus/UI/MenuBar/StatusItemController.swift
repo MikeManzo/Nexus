@@ -1,10 +1,15 @@
 import AppKit
 import SwiftUI
 
-/// Owns the `NSStatusItem` and its `NSPopover`. AppKit, not `MenuBarExtra` — see
-/// `docs/01-capability-research.md` §6 for why: `MenuBarExtra`'s `.window` style still has gaps
-/// around transient-popover dismissal and activation-policy control that a hosted `NSPopover`
-/// doesn't have. The popover's *content* is plain SwiftUI (`PopoverView`).
+/// Owns the `NSStatusItem` and its click-to-open `NSPopover` (the full feature set: create,
+/// manage, settings, quit). The glanceable hover-to-preview-and-switch experience lives
+/// separately in `MenuBarLandingZoneController`, centered in the menu bar — not here, and
+/// deliberately not triggered from this status item: verified live that a hover trigger far from
+/// where its content appears doesn't work as an interaction (the cursor has to cross real screen
+/// distance with nothing under it). AppKit, not `MenuBarExtra` — see
+/// `docs/01-capability-research.md` §6: `MenuBarExtra`'s `.window` style still has gaps around
+/// transient-popover dismissal and activation-policy control that a hosted `NSPopover` doesn't
+/// have. The popover's *content* is plain SwiftUI.
 @MainActor
 final class StatusItemController: NSObject {
     private let statusItem: NSStatusItem

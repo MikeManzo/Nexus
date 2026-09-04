@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuBarSettingsView: View {
     @AppStorage("menuBarDisplayMode") private var displayModeRaw = MenuBarDisplayMode.name.rawValue
+    @AppStorage(MenuBarLandingZoneController.enabledDefaultsKey) private var quickSwitcherEnabled = false
 
     var body: some View {
         Form {
@@ -12,6 +13,13 @@ struct MenuBarSettingsView: View {
                     }
                 }
                 .pickerStyle(.radioGroup)
+            }
+
+            Section("Quick Switcher") {
+                Toggle("Show quick switcher in menu bar", isOn: $quickSwitcherEnabled)
+                Text("A small pill centered in the menu bar showing your current desktop. Hover over it to see and switch between all your desktops without opening the full menu.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
