@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MenuBarSettingsView: View {
-    @AppStorage("menuBarDisplayMode") private var displayModeRaw = MenuBarDisplayMode.icon.rawValue
+    @AppStorage("menuBarDisplayMode") private var displayModeRaw = MenuBarDisplayMode.name.rawValue
 
     var body: some View {
         Form {

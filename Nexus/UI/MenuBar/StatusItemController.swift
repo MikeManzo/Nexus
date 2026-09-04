@@ -68,8 +68,20 @@ final class StatusItemController: NSObject {
 
     private func updateAppearance() {
         guard let button = statusItem.button else { return }
-        let mode = MenuBarDisplayMode(rawValue: UserDefaults.standard.string(forKey: "menuBarDisplayMode") ?? "") ?? .icon
+        let mode = MenuBarDisplayMode(rawValue: UserDefaults.standard.string(forKey: "menuBarDisplayMode") ?? "") ?? .name
         switch mode {
+        case .name:
+            // A small dot in the active desktop's own accent color, plus its full name — matches
+            // the "current Space visible at a glance" pattern several menu-bar Spaces utilities
+            // use, adapted to Nexus's own per-desktop accent colors rather than a fixed brand mark.
+            if let active = coordinator.activeSpace {
+                button.image = NSColor.dotImage(color: NSColor(hex: active.accentColorHex))
+                button.imagePosition = .imageLeading
+                button.title = active.displayName
+            } else {
+                button.image = nil
+                button.title = "Nexus"
+            }
         case .icon:
             let image = NSImage(systemSymbolName: "rectangle.3.group", accessibilityDescription: "Nexus")
             image?.isTemplate = true
