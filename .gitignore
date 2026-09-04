@@ -26,6 +26,9 @@ sparkle_private_key*
 .sparkle_private_key*
 release-notes/private/
 
+# Release credentials (Apple ID / Team ID) — copy .env.example, never commit .env
+.env
+
 # Release artifacts (published separately, not source)
 dist/
 *.zip
