@@ -32,8 +32,10 @@ targets:
         CFBundleDisplayName: Nexus
         LSUIElement: true
         NSHumanReadableCopyright: "Copyright © 2026. All rights reserved."
-        # Placeholder — repoint at the real hosted appcast before any release (Phase 11).
-        SUFeedURL: "https://example.com/nexus/appcast.xml"
+        # GitHub's "latest release" asset URL — a stable link that always serves whatever
+        # appcast.xml scripts/release.sh most recently uploaded, so this never needs to change
+        # between releases.
+        SUFeedURL: "https://github.com/MikeManzo/Nexus/releases/latest/download/appcast.xml"
         # Public half of the "nexus" Keychain-account EdDSA key pair. Never put the private key here.
         SUPublicEDKey: "J4Jl3C3l/Ig8gqui+209SVylAWPuKtzE0u9JqjCGKKo="
         SUEnableAutomaticChecks: true

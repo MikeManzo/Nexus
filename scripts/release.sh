@@ -29,9 +29,7 @@ BUNDLE_ID="com.nexusapp.Nexus"
 RELEASE_BRANCH="main"
 SPARKLE_BIN="./tools/sparkle-cli"
 
-# Set this once you've created the GitHub repo Nexus will publish releases
-# through, as "owner/repo" — e.g. "yourname/nexus".
-GITHUB_REPO=""
+GITHUB_REPO="MikeManzo/Nexus"
 
 # ── Credentials (loaded from .env + Keychain) ───────────────
 ENV_FILE="$(dirname "$0")/../.env"
