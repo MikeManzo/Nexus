@@ -85,7 +85,7 @@ struct PopoverView: View {
     }
 
     private var desktopList: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("DESKTOPS")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -98,16 +98,18 @@ struct PopoverView: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
-            }
-
-            ForEach(coordinator.spaces) { space in
-                DesktopRow(space: space, isBusy: coordinator.isBusy) {
-                    Task { await coordinator.activate(space) }
+            } else {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 56, maximum: 66), spacing: 10)], spacing: 12) {
+                    ForEach(coordinator.spaces) { space in
+                        DesktopTile(space: space, isBusy: coordinator.isBusy) {
+                            Task { await coordinator.activate(space) }
+                        }
+                    }
                 }
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 12)
             }
         }
-        .padding(.bottom, 6)
+        .padding(.bottom, 10)
     }
 
     private var quickActions: some View {
@@ -166,9 +168,10 @@ struct PopoverView: View {
     }
 }
 
-/// One row in the desktop list — its own view so hover state can be tracked locally without
-/// re-rendering the whole popover on every mouse move.
-private struct DesktopRow: View {
+/// One tile in the desktop grid — a colored swatch (the desktop's own accent) with its number,
+/// its name below, and a ring around the active one. Its own view so hover state can be tracked
+/// locally without re-rendering the whole popover on every mouse move.
+private struct DesktopTile: View {
     let space: DesktopSpace
     let isBusy: Bool
     let action: () -> Void
@@ -177,22 +180,27 @@ private struct DesktopRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(space.accentColor)
-                    .frame(width: 8, height: 8)
+            VStack(spacing: 4) {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(space.accentColor.opacity(space.isActive ? 0.95 : (isHovering ? 0.75 : 0.55)))
+                    .frame(width: 52, height: 40)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(Color.primary.opacity(space.isActive ? 0.85 : 0), lineWidth: 2)
+                    )
+                    .overlay(
+                        Text("\(space.order + 1)")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white)
+                    )
                 Text(space.displayName)
-                    .fontWeight(space.isActive ? .semibold : .regular)
-                Spacer()
-                if space.order < 9 {
-                    Text("⌘\(space.order + 1)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                    .font(.caption2)
+                    .fontWeight(space.isActive ? .bold : .regular)
+                    .foregroundStyle(space.isActive ? Color.primary : Color.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .background(RoundedRectangle(cornerRadius: 6).fill(rowBackground))
+            .frame(width: 60)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -201,11 +209,5 @@ private struct DesktopRow: View {
         .accessibilityLabel(space.isActive ? "\(space.displayName), current desktop" : space.displayName)
         .accessibilityHint("Switches to this desktop")
         .accessibilityAddTraits(space.isActive ? [.isSelected] : [])
-    }
-
-    private var rowBackground: Color {
-        if space.isActive { return space.accentColor.opacity(0.14) }
-        if isHovering { return Color.primary.opacity(0.06) }
-        return .clear
     }
 }
