@@ -45,16 +45,18 @@ source "$ENV_FILE"
 [ "$APPLE_ID" = "your@email.com" ] && error "APPLE_ID is still the placeholder value in .env"
 [ -z "$GITHUB_REPO" ] && error "GITHUB_REPO is not set in this script (top of scripts/release.sh) — set it to owner/repo once Nexus has a GitHub repo."
 
-# Notarization uses a stored keychain profile (Apple's recommended approach).
-# Set it up once with:
+# Reuses the same notarytool keychain profile already set up for EVEOps —
+# the underlying app-specific password is scoped to the Apple ID/Team ID
+# above, not to a specific app, so one profile works for every app you
+# release under this account. If you'd rather keep a separate profile for
+# Nexus, change this to "NexusRelease" and run once:
 #   xcrun notarytool store-credentials "NexusRelease" \
 #     --apple-id "$APPLE_ID" --team-id "$TEAM_ID"
-# (It will prompt for an app-specific password and save everything securely.)
-NOTARY_PROFILE="NexusRelease"
+NOTARY_PROFILE="EVEOpsRelease"
 
 xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" > /dev/null 2>&1 || \
   error "Notarization keychain profile '$NOTARY_PROFILE' not found. Run this once to set it up:
-  xcrun notarytool store-credentials \"NexusRelease\" --apple-id \"$APPLE_ID\" --team-id \"$TEAM_ID\""
+  xcrun notarytool store-credentials \"$NOTARY_PROFILE\" --apple-id \"$APPLE_ID\" --team-id \"$TEAM_ID\""
 
 # ── Paths ────────────────────────────────────────────────────
 WORK_DIR=~/Desktop/NexusRelease

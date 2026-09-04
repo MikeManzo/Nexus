@@ -31,8 +31,12 @@ Each of these needs to happen once per machine you release from, before
    [developer.apple.com/account](https://developer.apple.com/account)).
    `.env` is gitignored — it is never committed.
 
-4. **Notarization keychain profile** (stores an app-specific password
-   securely, so it never needs to be typed or stored in a script):
+4. **Notarization keychain profile** — `scripts/release.sh` reuses the
+   `EVEOpsRelease` profile already set up for another project under the same
+   Apple ID/Team ID (the underlying app-specific password isn't scoped to a
+   specific app, so this is functionally identical to a Nexus-specific
+   profile). If you'd rather keep them separate, change `NOTARY_PROFILE` in
+   the script and run once:
    ```bash
    xcrun notarytool store-credentials "NexusRelease" \
      --apple-id "you@example.com" --team-id "XXXXXXXXXX"
