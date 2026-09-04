@@ -1,0 +1,36 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdatad/
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# XcodeGen-generated project (regenerate via `xcodegen generate`)
+*.xcodeproj
+Nexus/Info.plist
+
+# Sparkle CLI tools (generate_keys / sign_update / generate_appcast) — official binaries,
+# not source; re-fetch with `scripts/fetch-sparkle-tools.sh` rather than committing them.
+tools/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+
+# Sparkle release signing — NEVER commit these
+*.pem
+*.p12
+sparkle_private_key*
+.sparkle_private_key*
+release-notes/private/
+
+# Release artifacts (published separately, not source)
+dist/
+*.zip
+*.dmg
+appcast_local.xml
+
+# macOS
+.DS_Store

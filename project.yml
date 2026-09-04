@@ -1,0 +1,77 @@
+name: Nexus
+options:
+  bundleIdPrefix: com.nexusapp
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+configs:
+  Debug: debug
+  Release: release
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.9.6
+targets:
+  Nexus:
+    type: application
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Nexus
+    info:
+      path: Nexus/Info.plist
+      properties:
+        CFBundleDisplayName: Nexus
+        LSUIElement: true
+        NSHumanReadableCopyright: "Copyright © 2026. All rights reserved."
+        # Placeholder — repoint at the real hosted appcast before any release (Phase 11).
+        SUFeedURL: "https://example.com/nexus/appcast.xml"
+        # Public half of the "nexus" Keychain-account EdDSA key pair. Never put the private key here.
+        SUPublicEDKey: "J4Jl3C3l/Ig8gqui+209SVylAWPuKtzE0u9JqjCGKKo="
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nexusapp.Nexus
+        PRODUCT_NAME: Nexus
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        ENABLE_APP_SANDBOX: NO
+        CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - package: Sparkle
+  NexusTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: NexusTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nexusapp.NexusTests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - target: Nexus
+schemes:
+  Nexus:
+    build:
+      targets:
+        Nexus: all
+        NexusTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - NexusTests
+    archive:
+      config: Release
