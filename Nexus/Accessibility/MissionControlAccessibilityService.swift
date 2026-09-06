@@ -83,6 +83,16 @@ final class MissionControlAccessibilityService {
 
         var presentedCount = 0
         let presentedDump = describeElement(axApp, depth: 0, maxDepth: 8, count: &presentedCount)
+        // Captured *before* dismissing, and regardless of whether `mc.spaces.list` was found —
+        // if Dock.app's own AX tree never exposes the Spaces Bar's real content (confirmed to
+        // happen on at least one real Mac even after polling up to 3s for it), the next thing
+        // worth knowing is whether some *other* process is hosting it instead of Dock.app. A real
+        // running-applications dump from that Mac showed `com.apple.dock.extra` and
+        // `com.apple.dock.helper` as separate processes from the main `com.apple.dock` this
+        // service has only ever queried — plausible new homes for Mission Control's real content
+        // on a newer macOS build.
+        let candidateDump = dumpCandidateProcesses()
+        let runningApps = runningApplicationsSummary()
 
         dismissMissionControl()
 
@@ -95,6 +105,12 @@ final class MissionControlAccessibilityService {
 
         === Dock.app AX tree WHILE Mission Control is presented ; \(presentedCount) elements ===
         \(presentedDump)
+
+        === Candidate Dock-adjacent processes WHILE Mission Control is presented ===
+        \(candidateDump)
+
+        === Running applications WHILE Mission Control is presented ===
+        \(runningApps)
         """
 
         let directory = Self.diagnosticsDirectory()
@@ -176,6 +192,52 @@ final class MissionControlAccessibilityService {
             if ContinuousClock.now >= deadline { return nil }
             try? await Task.sleep(for: pollInterval)
         }
+    }
+
+    /// Processes adjacent to the main Dock that could plausibly host Mission Control's real
+    /// content on some macOS build instead of `com.apple.dock` itself — not a guess made up for
+    /// this doc comment; `com.apple.dock.extra` and `com.apple.dock.helper` are real, distinct
+    /// running processes confirmed via `runningApplicationsSummary()`'s own output on a Mac where
+    /// the main Dock's `mc` group never populates.
+    private static let candidateBundleIdentifiers = [
+        "com.apple.dock.extra",
+        "com.apple.dock.helper",
+        "com.apple.WindowManager",
+        "com.apple.controlcenter",
+    ]
+
+    private func dumpCandidateProcesses() -> String {
+        Self.candidateBundleIdentifiers.map { bundleID in
+            guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else {
+                return "[\(bundleID)] not running"
+            }
+            let candidateAX = AXUIElementCreateApplication(app.processIdentifier)
+            let found = findElement(candidateAX, matchingIdentifier: "mc.spaces.list", depth: 0)
+            var count = 0
+            let dump = describeElement(candidateAX, depth: 0, maxDepth: 6, count: &count)
+            return "[\(bundleID)] pid=\(app.processIdentifier)  mc.spaces.list=\(found != nil ? "FOUND" : "not found")  (\(count) elements)\n\(dump)"
+        }.joined(separator: "\n\n")
+    }
+
+    /// One line per running app: bundle identifier, name, PID, and activation policy — cheap to
+    /// capture (no AX tree walking) and, unlike everything else in this file, doesn't assume
+    /// Mission Control's UI is hosted by `com.apple.dock` at all. If it's moved to its own
+    /// process on some Mac, this is what would reveal that: a candidate bundle identifier this
+    /// service isn't currently looking at.
+    private func runningApplicationsSummary() -> String {
+        NSWorkspace.shared.runningApplications
+            .sorted { ($0.bundleIdentifier ?? "") < ($1.bundleIdentifier ?? "") }
+            .map { app in
+                let policy: String
+                switch app.activationPolicy {
+                case .regular: policy = "regular"
+                case .accessory: policy = "accessory"
+                case .prohibited: policy = "prohibited"
+                @unknown default: policy = "unknown"
+                }
+                return "\(app.bundleIdentifier ?? "(no bundle id)")  pid=\(app.processIdentifier)  policy=\(policy)  name=\(app.localizedName ?? "?")"
+            }
+            .joined(separator: "\n")
     }
 
     private func findElement(_ root: AXUIElement, matchingIdentifier target: String, depth: Int) -> AXUIElement? {

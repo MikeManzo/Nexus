@@ -47,6 +47,39 @@ enum AXHelpers {
         return AXUIElementCreateApplication(dockApp.processIdentifier)
     }
 
+    /// Processes observed to host Mission Control's real Spaces Bar (`mc.spaces.list`), checked
+    /// in this order every poll. `com.apple.dock` is the original, documented location this app
+    /// was built against ; but a real diagnostic dump from a Mac running a newer macOS build
+    /// showed Dock's own `mc` group as a permanently empty placeholder there, with the actual
+    /// Spaces Bar living entirely under the separate `com.apple.WindowManager` process instead.
+    private static let missionControlSpacesHostBundleIdentifiers = ["com.apple.dock", "com.apple.WindowManager"]
+
+    /// Polls across every candidate host process for `mc.spaces.list` to appear, rather than
+    /// assuming a single fixed process (`com.apple.dock`) is always the right one to ask, or that
+    /// a single fixed delay is always enough to wait. Checking both live, on every poll tick,
+    /// means whichever one actually has it is picked up promptly regardless of which Mac this
+    /// runs on ; see `missionControlSpacesHostBundleIdentifiers`'s doc comment for why there's
+    /// more than one candidate at all.
+    @MainActor
+    static func resolveMissionControlSpacesHost(
+        timeout: Duration = .seconds(3),
+        pollInterval: Duration = .milliseconds(150)
+    ) async -> AXUIElement? {
+        let deadline = ContinuousClock.now + timeout
+        while true {
+            for bundleID in missionControlSpacesHostBundleIdentifiers {
+                if let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first {
+                    let axApp = AXUIElementCreateApplication(app.processIdentifier)
+                    if findElement(axApp, matchingIdentifier: "mc.spaces.list") != nil {
+                        return axApp
+                    }
+                }
+            }
+            if ContinuousClock.now >= deadline { return nil }
+            try? await Task.sleep(for: pollInterval)
+        }
+    }
+
     /// `/System/Applications/Mission Control.app` ; launching it by bundle id (rather than
     /// synthesizing the Mission Control keyboard shortcut) works regardless of whether the user
     /// has rebound or disabled that shortcut.
