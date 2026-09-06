@@ -79,7 +79,7 @@ final class MissionControlAccessibilityService {
 
         Log.accessibility.info("Diagnostic: invoking Mission Control via com.apple.exposelauncher")
         try await NSWorkspace.shared.openApplication(at: missionControlURL, configuration: NSWorkspace.OpenConfiguration())
-        try await Task.sleep(for: .milliseconds(700))
+        _ = await pollForElement(axApp, matchingIdentifier: "mc.spaces.list")
 
         var presentedCount = 0
         let presentedDump = describeElement(axApp, depth: 0, maxDepth: 8, count: &presentedCount)
@@ -124,7 +124,7 @@ final class MissionControlAccessibilityService {
 
         Log.accessibility.info("Detailed diagnostic: invoking Mission Control")
         try await NSWorkspace.shared.openApplication(at: missionControlURL, configuration: NSWorkspace.OpenConfiguration())
-        try await Task.sleep(for: .milliseconds(700))
+        _ = await pollForElement(axApp, matchingIdentifier: "mc.spaces.list")
 
         var output = "Nexus Mission Control detailed Spaces Bar diagnostic\nCaptured: \(Date().formatted(.iso8601))\n\n"
 
@@ -154,6 +154,28 @@ final class MissionControlAccessibilityService {
         Log.accessibility.info("Wrote detailed AX dump to \(fileURL.path, privacy: .public)")
 
         return DumpResult(fileURL: fileURL, elementCountAtRest: 0, elementCountWhilePresented: 0)
+    }
+
+    /// Polls for an AX element to actually appear, rather than assuming a single fixed delay
+    /// after invoking Mission Control is always enough — see `AccessibilitySpaceManager`'s
+    /// identical helper. A real diagnostic dump (`dock-ax-dump-1788715997.txt`) is what surfaced
+    /// this: it captured Mission Control's wrapping `AXGroup id=mc` with zero children at 700ms,
+    /// on hardware where that wrapper's real content — the Spaces Bar — evidently takes longer to
+    /// populate than the fixed wait this used to rely on.
+    private func pollForElement(
+        _ root: AXUIElement,
+        matchingIdentifier target: String,
+        timeout: Duration = .seconds(3),
+        pollInterval: Duration = .milliseconds(150)
+    ) async -> AXUIElement? {
+        let deadline = ContinuousClock.now + timeout
+        while true {
+            if let found = findElement(root, matchingIdentifier: target, depth: 0) {
+                return found
+            }
+            if ContinuousClock.now >= deadline { return nil }
+            try? await Task.sleep(for: pollInterval)
+        }
     }
 
     private func findElement(_ root: AXUIElement, matchingIdentifier target: String, depth: Int) -> AXUIElement? {

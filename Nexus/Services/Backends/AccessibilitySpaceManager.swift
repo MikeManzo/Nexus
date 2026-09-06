@@ -135,7 +135,7 @@ final class AccessibilitySpaceManager: SpaceManaging {
 
     private func withMissionControlPresented<T: Sendable>(
         dismissAfter: Bool = true,
-        _ body: (AXUIElement) async throws -> T
+        _ body: @MainActor (AXUIElement) async throws -> T
     ) async throws -> T {
         guard AXIsProcessTrusted() else { throw SpaceError.accessibilityPermissionDenied }
         guard let axApp = AXHelpers.dockAXApplication() else { throw SpaceError.missionControlUnavailable }
@@ -150,7 +150,16 @@ final class AccessibilitySpaceManager: SpaceManaging {
         NotificationCenter.default.post(name: .missionControlWillPresent, object: nil)
         defer { NotificationCenter.default.post(name: .missionControlDidDismiss, object: nil) }
 
-        try await Task.sleep(for: .milliseconds(700))
+        // A fixed sleep here (previously 700ms, always) assumed Mission Control finishes
+        // populating its Spaces Bar in the same amount of time on every Mac — confirmed false by
+        // a real report of "Mission Control isn't responding right now" on every attempt, on
+        // hardware this was never tested against. Polling for the real element to actually exist,
+        // rather than guessing a fixed delay, adapts to whatever that machine actually needs
+        // instead of failing outright the moment it needs more than 700ms.
+        guard await Self.pollForElement(in: axApp, identifier: "mc.spaces.list") != nil else {
+            AXHelpers.dismissMissionControl()
+            throw SpaceError.missionControlUnavailable
+        }
 
         let result: T
         do {
@@ -192,6 +201,27 @@ final class AccessibilitySpaceManager: SpaceManaging {
         SpaceReconciler.saveSnapshot(reconciled)
         Log.spaceManager.info("Observed \(reconciled.count, privacy: .public) spaces via Accessibility")
         return reconciled
+    }
+
+    /// Polls for an AX element to appear, rather than assuming a single fixed delay is always
+    /// enough — see `withMissionControlPresented`'s doc comment for why. 3 seconds total is
+    /// generous relative to the ~700ms this used to hard-code; on a machine where that original
+    /// delay was already enough, this still resolves on the very first check, at negligible cost.
+    @MainActor
+    private static func pollForElement(
+        in axApp: AXUIElement,
+        identifier: String,
+        timeout: Duration = .seconds(3),
+        pollInterval: Duration = .milliseconds(150)
+    ) async -> AXUIElement? {
+        let deadline = ContinuousClock.now + timeout
+        while true {
+            if let found = AXHelpers.findElement(axApp, matchingIdentifier: identifier) {
+                return found
+            }
+            if ContinuousClock.now >= deadline { return nil }
+            try? await Task.sleep(for: pollInterval)
+        }
     }
 
     private func children(of list: AXUIElement) -> [AXUIElement] {
