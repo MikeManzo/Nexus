@@ -15,6 +15,9 @@ protocol SpaceMetadataStoring: Sendable {
     func allMetadata() async -> [UUID: SpaceMetadata]
     func setCustomName(_ name: String?, for key: UUID) async
     func setAccentColor(_ hex: String?, for key: UUID) async
+    func setSymbolName(_ symbolName: String?, for key: UUID) async
+    func setLaunchAppBundleIDs(_ bundleIDs: [String], for key: UUID) async
+    func setShortcut(_ shortcut: KeyboardShortcut?, for key: UUID) async
     func removeMetadata(for key: UUID) async
 }
 
@@ -39,7 +42,7 @@ actor SpaceMetadataStore: SpaceMetadataStoring {
     }
 
     func setCustomName(_ name: String?, for key: UUID) {
-        var entry = storage[key] ?? SpaceMetadata(stableKey: key, customName: nil, symbolName: nil, accentColorHex: nil, createdAt: Date())
+        var entry = blankEntry(for: key)
         entry.customName = (name?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) ? nil : name
         storage[key] = entry
         persist()
@@ -47,11 +50,39 @@ actor SpaceMetadataStore: SpaceMetadataStoring {
     }
 
     func setAccentColor(_ hex: String?, for key: UUID) {
-        var entry = storage[key] ?? SpaceMetadata(stableKey: key, customName: nil, symbolName: nil, accentColorHex: nil, createdAt: Date())
+        var entry = blankEntry(for: key)
         entry.accentColorHex = hex
         storage[key] = entry
         persist()
         Log.persistence.info("Updated accent color for space \(key.uuidString, privacy: .public)")
+    }
+
+    func setSymbolName(_ symbolName: String?, for key: UUID) {
+        var entry = blankEntry(for: key)
+        entry.symbolName = symbolName
+        storage[key] = entry
+        persist()
+        Log.persistence.info("Updated icon for space \(key.uuidString, privacy: .public)")
+    }
+
+    func setLaunchAppBundleIDs(_ bundleIDs: [String], for key: UUID) {
+        var entry = blankEntry(for: key)
+        entry.launchAppBundleIDs = bundleIDs.isEmpty ? nil : bundleIDs
+        storage[key] = entry
+        persist()
+        Log.persistence.info("Updated launch apps for space \(key.uuidString, privacy: .public)")
+    }
+
+    func setShortcut(_ shortcut: KeyboardShortcut?, for key: UUID) {
+        var entry = blankEntry(for: key)
+        entry.shortcut = shortcut
+        storage[key] = entry
+        persist()
+        Log.persistence.info("Updated shortcut for space \(key.uuidString, privacy: .public)")
+    }
+
+    private func blankEntry(for key: UUID) -> SpaceMetadata {
+        storage[key] ?? SpaceMetadata(stableKey: key, customName: nil, symbolName: nil, accentColorHex: nil, createdAt: Date(), launchAppBundleIDs: nil, shortcut: nil)
     }
 
     func removeMetadata(for key: UUID) {

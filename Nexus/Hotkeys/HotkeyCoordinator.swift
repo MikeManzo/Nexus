@@ -19,6 +19,12 @@ import Observation
 final class HotkeyCoordinator {
     private(set) var bindings: [HotkeyAction: HotkeyBinding]
     private var registeredIDs: [HotkeyAction: UInt32] = [:]
+    /// Per-desktop shortcuts (`DesktopSpace.hotkeyShortcut`), keyed by `stableKey` rather than a
+    /// fixed `HotkeyAction` case — these bind to a specific desktop's *identity*, independent of
+    /// its numbered slot, so reordering or renaming doesn't disconnect them. Kept as a second,
+    /// parallel registration table rather than folding into `bindings`/`HotkeyAction` since that
+    /// enum is a fixed, `CaseIterable` set by design (see its own doc comment) ; desktops are not.
+    private var spaceRegisteredIDs: [UUID: (id: UInt32, shortcut: KeyboardShortcut)] = [:]
 
     private let store: HotkeyPreferencesStoring
     private let manager: GlobalHotkeyManager
@@ -37,6 +43,8 @@ final class HotkeyCoordinator {
         self.manager = manager
         self.bindings = store.loadBindings()
         applyAll()
+        applySpaceShortcuts()
+        observeSpaceChanges()
     }
 
     func setEnabled(_ enabled: Bool, for action: HotkeyAction) {
@@ -57,6 +65,70 @@ final class HotkeyCoordinator {
 
     func conflictingAction(for shortcut: KeyboardShortcut, excluding: HotkeyAction) -> HotkeyAction? {
         bindings.first { key, value in key != excluding && value.isEnabled && value.shortcut == shortcut }?.key
+    }
+
+    /// Checked before assigning a desktop-specific shortcut (`SpaceManagerView`'s customize
+    /// sheet) — a human-readable description of whatever already uses `shortcut`, across *both*
+    /// registration tables (a numbered-slot action, or another desktop), or `nil` if it's free.
+    func conflictDescription(for shortcut: KeyboardShortcut, excludingSpace: DesktopSpace) -> String? {
+        if let action = bindings.first(where: { $0.value.isEnabled && $0.value.shortcut == shortcut })?.key {
+            return action.label
+        }
+        if let other = appCoordinator.spaces.first(where: {
+            $0.identifier != excludingSpace.identifier && $0.hotkeyShortcut == shortcut
+        }) {
+            return other.displayName
+        }
+        return nil
+    }
+
+    /// `AppCoordinator` is `@Observable`, but this class isn't a SwiftUI view, so it doesn't get
+    /// automatic re-renders — without this, a shortcut just assigned in `SpaceManagerView` (or a
+    /// desktop that's renamed, deleted, or newly created) wouldn't reach `GlobalHotkeyManager`
+    /// until something else happened to call `applySpaceShortcuts()` again. Re-registers itself
+    /// after every change since tracking is one-shot, same pattern as
+    /// `StatusItemController.observeActiveSpaceChanges`.
+    private func observeSpaceChanges() {
+        withObservationTracking {
+            _ = appCoordinator.spaces
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                self?.applySpaceShortcuts()
+                self?.observeSpaceChanges()
+            }
+        }
+    }
+
+    /// Registers exactly the desktops that currently have a `hotkeyShortcut` set, unregistering
+    /// anything stale first (a shortcut that changed, was cleared, or whose desktop no longer
+    /// exists). The handler looks the space up again by `stableKey` at fire time rather than
+    /// capturing it now, so it always switches to wherever that desktop currently is — the whole
+    /// point of binding by identity instead of by slot.
+    private func applySpaceShortcuts() {
+        let current = Dictionary(uniqueKeysWithValues: appCoordinator.spaces.compactMap { space in
+            space.hotkeyShortcut.map { (space.identifier.stableKey, $0) }
+        })
+
+        for (key, registration) in spaceRegisteredIDs where current[key] != registration.shortcut {
+            manager.unregister(registration.id)
+            spaceRegisteredIDs.removeValue(forKey: key)
+        }
+
+        for (key, shortcut) in current where spaceRegisteredIDs[key] == nil {
+            guard let id = manager.register(shortcut, handler: { [weak self] in self?.performSpaceSwitch(stableKey: key) }) else {
+                continue
+            }
+            spaceRegisteredIDs[key] = (id, shortcut)
+        }
+    }
+
+    private func performSpaceSwitch(stableKey: UUID) {
+        guard let space = appCoordinator.spaces.first(where: { $0.identifier.stableKey == stableKey }) else {
+            Log.hotkeys.info("Desktop shortcut fired for a desktop that no longer exists")
+            return
+        }
+        Log.hotkeys.info("Desktop shortcut fired: \(space.displayName, privacy: .public)")
+        Task { await appCoordinator.activate(space) }
     }
 
     private func persistAndReapply() {

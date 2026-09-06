@@ -18,6 +18,10 @@ struct SpaceManagerView: View {
     @State private var renamingSpace: DesktopSpace?
     @State private var renameText = ""
     @State private var customizeColorHex: String?
+    @State private var customizeSymbolName: String?
+    @State private var customizeLaunchAppBundleIDs: [String] = []
+    @State private var customizeShortcut: KeyboardShortcut?
+    @State private var shortcutConflictMessage: String?
     @State private var pendingDeletion: DesktopSpace?
 
     var body: some View {
@@ -90,9 +94,15 @@ struct SpaceManagerView: View {
                         .strokeBorder(space.accentColor, lineWidth: 2)
                         .frame(width: 22, height: 22)
                 }
-                Circle()
-                    .fill(space.accentColor)
-                    .frame(width: 14, height: 14)
+                if let symbolName = space.symbolName {
+                    Image(systemName: symbolName)
+                        .font(.system(size: 11))
+                        .foregroundStyle(space.accentColor)
+                } else {
+                    Circle()
+                        .fill(space.accentColor)
+                        .frame(width: 14, height: 14)
+                }
             }
             .frame(width: 22, height: 22)
 
@@ -106,6 +116,10 @@ struct SpaceManagerView: View {
             Button("Customize…") {
                 renameText = space.customName ?? ""
                 customizeColorHex = space.accentColorHex
+                customizeSymbolName = space.symbolName
+                customizeLaunchAppBundleIDs = space.launchAppBundleIDs ?? []
+                customizeShortcut = space.hotkeyShortcut
+                shortcutConflictMessage = nil
                 renamingSpace = space
             }
             .buttonStyle(.link)
@@ -143,8 +157,45 @@ struct SpaceManagerView: View {
                 .onSubmit { commitCustomize(for: space) }
 
             VStack(alignment: .leading, spacing: 8) {
+                Text("Icon").font(.caption).foregroundStyle(.secondary)
+                IconPicker(selectedSymbolName: $customizeSymbolName)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Accent color").font(.caption).foregroundStyle(.secondary)
                 AccentColorPicker(selectedHex: $customizeColorHex)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Launch these apps when you arrive").font(.caption).foregroundStyle(.secondary)
+                LaunchAppsPicker(bundleIDs: $customizeLaunchAppBundleIDs)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Desktop shortcut").font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    ShortcutRecorderView(currentShortcut: customizeShortcut) { newShortcut in
+                        if let conflict = coordinator.hotkeyCoordinator?.conflictDescription(for: newShortcut, excludingSpace: space) {
+                            shortcutConflictMessage = "\(newShortcut.displayString) is already used by \(conflict)."
+                        } else {
+                            customizeShortcut = newShortcut
+                            shortcutConflictMessage = nil
+                        }
+                    }
+                    if customizeShortcut != nil {
+                        Button("Clear") {
+                            customizeShortcut = nil
+                            shortcutConflictMessage = nil
+                        }
+                        .buttonStyle(.link)
+                    }
+                }
+                if let shortcutConflictMessage {
+                    Text(shortcutConflictMessage).font(.caption).foregroundStyle(.red)
+                }
+                Text("Switches straight to this desktop from anywhere, independent of its position — see Settings → Shortcuts for the numbered-slot shortcuts.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             HStack {
@@ -155,7 +206,7 @@ struct SpaceManagerView: View {
             }
         }
         .padding(20)
-        .frame(width: 340)
+        .frame(width: 360)
     }
 
     private func commitCustomize(for space: DesktopSpace) {
@@ -163,6 +214,9 @@ struct SpaceManagerView: View {
         Task {
             await coordinator.rename(space, to: name)
             await coordinator.setAccentColor(customizeColorHex, for: space)
+            await coordinator.setSymbol(customizeSymbolName, for: space)
+            await coordinator.setLaunchAppBundleIDs(customizeLaunchAppBundleIDs, for: space)
+            await coordinator.setShortcut(customizeShortcut, for: space)
         }
         renamingSpace = nil
     }

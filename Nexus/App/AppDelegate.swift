@@ -33,10 +33,8 @@ private func isUnexpectedLaunchWindow(_ window: NSWindow?) -> Bool {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    static let experimentalBackendKey = "experimentalBackendEnabled"
-
     let coordinator = AppCoordinator(
-        spaceManager: AppDelegate.makeSpaceManager(),
+        spaceManager: AccessibilitySpaceManager(),
         updateManager: SparkleUpdateManager(),
         metadataStore: SpaceMetadataStore(),
         accessibilityPermission: AccessibilityPermissionManager(),
@@ -49,16 +47,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var onboardingWindowController: OnboardingWindowController?
 
     private static let hasCompletedOnboardingKey = "hasCompletedOnboarding"
-
-    /// Chosen once, at launch ; swapping backends live isn't worth the added risk for a toggle
-    /// this rarely flipped, so Settings → Experimental asks for a restart instead.
-    private static func makeSpaceManager() -> SpaceManaging {
-        if UserDefaults.standard.bool(forKey: experimentalBackendKey) {
-            Log.spaceManager.info("Using Tier 3 experimental backend (private Spaces API)")
-            return ExperimentalSpaceManager()
-        }
-        return AccessibilitySpaceManager()
-    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)

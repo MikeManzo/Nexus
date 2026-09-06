@@ -30,6 +30,12 @@ struct DesktopSpace: Identifiable, Hashable, Sendable, Codable {
     /// consistently as this desktop's identity everywhere it appears ; popover, Space Manager,
     /// and (via `AccentPalette`) in the color picker itself.
     var accentColorHex: String?
+    /// Bundle identifiers to launch (if not already running) when you switch to this desktop —
+    /// see `AppCoordinator.activate`. `nil`/empty means none configured.
+    var launchAppBundleIDs: [String]?
+    /// A global shortcut bound to this specific desktop, independent of its numbered slot — see
+    /// `HotkeyCoordinator`.
+    var hotkeyShortcut: KeyboardShortcut?
 
     var displayName: String {
         customName ?? systemLabel ?? "Desktop \(order + 1)"

@@ -20,8 +20,13 @@ import Foundation
 ///
 /// Conformers, by tier (see the research doc for the full tradeoff writeup):
 /// - Tier 2 `AccessibilitySpaceManager` (default) ; drives Mission Control's accessibility tree.
-/// - Tier 3 `ExperimentalSpaceManager` (opt-in, off by default) ; undocumented SkyLight symbols.
 /// - `MockSpaceManager` ; in-memory, used until Tier 2 lands (Phase 4+) and in tests/previews.
+///
+/// A Tier 3 backend built on undocumented private SkyLight symbols (`CGSCopyManagedDisplaySpaces`
+/// / `CGSManagedDisplaySetCurrentSpace`) was tried and removed ; it confirmed-consolidated windows
+/// from multiple desktops onto one in live testing. See `docs/01-capability-research.md` for the
+/// full writeup ; nothing conforming to this protocol should go back down that path without first
+/// finding the correct call sequence Mission Control itself actually uses.
 @MainActor
 protocol SpaceManaging: AnyObject {
     func spaces() async throws -> [DesktopSpace]

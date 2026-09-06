@@ -8,14 +8,19 @@
 // Copyright (c) 2026 CitizenCoder
 //
 
+import AppKit
 import SwiftUI
 
-/// A single at-a-glance dashboard for every system permission Nexus can use — otherwise these are
-/// scattered across the Accessibility tab (its diagnostics) and the Menu Bar tab (the Desktop
-/// Previews toggle itself), with no one place showing "what's granted right now" for the whole
-/// app. This is that place; the other tabs still own their own deeper controls.
+/// A single at-a-glance dashboard for every system permission Nexus can use, plus the
+/// Accessibility diagnostic tools that used to live on their own separate tab — merged here since
+/// that tab was otherwise just duplicating this one's Accessibility status row, and the
+/// diagnostics themselves are niche/developer-facing enough not to need their own top-level home.
 struct PermissionsSettingsView: View {
     let coordinator: AppCoordinator
+
+    @State private var connectionTestStatus: String?
+    @State private var diagnosticStatus: String?
+    @State private var isRunningDiagnostic = false
 
     var body: some View {
         Form {
@@ -23,13 +28,43 @@ struct PermissionsSettingsView: View {
                 PermissionStatusRow(
                     title: "Accessibility",
                     isTrusted: coordinator.accessibilityPermission.isTrusted,
-                    explanation: "Required — switching, creating, and deleting desktops all go through this. Nexus can't do much of anything without it.",
+                    explanation: "Required — switching, creating, and deleting desktops all go through this. Nexus can't do much of anything without it. It does not log keystrokes, read other apps' content, or send anything over the network.",
                     onGrant: { coordinator.accessibilityPermission.requestPermission() },
                     onOpenSettings: { coordinator.accessibilityPermission.openSystemSettings() },
                     onRecheck: { coordinator.accessibilityPermission.refresh() }
                 )
             } header: {
                 Text("Required")
+            }
+
+            Section("Accessibility Diagnostics") {
+                Button("Test Accessibility Connection") {
+                    runConnectionTest()
+                }
+                .disabled(!coordinator.accessibilityPermission.isTrusted)
+                if let connectionTestStatus {
+                    Text(connectionTestStatus).font(.caption).foregroundStyle(.secondary)
+                }
+
+                Text("Briefly opens Mission Control to capture its accessibility structure — this is groundwork for building real desktop switching, not something you need to run day to day.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                HStack {
+                    Button(isRunningDiagnostic ? "Scanning…" : "Run Diagnostic Scan") {
+                        runDiagnostic()
+                    }
+                    .disabled(!coordinator.accessibilityPermission.isTrusted || isRunningDiagnostic)
+
+                    Button(isRunningDiagnostic ? "Scanning…" : "Run Detailed Spaces Scan") {
+                        runDetailedDiagnostic()
+                    }
+                    .disabled(!coordinator.accessibilityPermission.isTrusted || isRunningDiagnostic)
+                }
+
+                if let diagnosticStatus {
+                    Text(diagnosticStatus).font(.caption).foregroundStyle(.secondary)
+                }
             }
 
             Section {
@@ -53,6 +88,45 @@ struct PermissionsSettingsView: View {
         .onAppear {
             coordinator.accessibilityPermission.refresh()
             coordinator.screenRecordingPermission.refresh()
+        }
+    }
+
+    private func runConnectionTest() {
+        do {
+            let ok = try coordinator.missionControlDiagnostics.testConnection()
+            connectionTestStatus = ok ? "Connected — Nexus can read Dock.app's accessibility tree." : "Unexpected response from Dock.app."
+        } catch {
+            connectionTestStatus = "Failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func runDiagnostic() {
+        isRunningDiagnostic = true
+        diagnosticStatus = nil
+        Task {
+            do {
+                let result = try await coordinator.missionControlDiagnostics.dumpDockAccessibilityTree()
+                diagnosticStatus = "Captured \(result.elementCountAtRest) elements at rest, \(result.elementCountWhilePresented) while presented.\nSaved to \(result.fileURL.path)"
+                NSWorkspace.shared.activateFileViewerSelecting([result.fileURL])
+            } catch {
+                diagnosticStatus = "Failed: \(error.localizedDescription)"
+            }
+            isRunningDiagnostic = false
+        }
+    }
+
+    private func runDetailedDiagnostic() {
+        isRunningDiagnostic = true
+        diagnosticStatus = nil
+        Task {
+            do {
+                let result = try await coordinator.missionControlDiagnostics.dumpSpacesBarDetail()
+                diagnosticStatus = "Detailed scan saved to \(result.fileURL.path)"
+                NSWorkspace.shared.activateFileViewerSelecting([result.fileURL])
+            } catch {
+                diagnosticStatus = "Failed: \(error.localizedDescription)"
+            }
+            isRunningDiagnostic = false
         }
     }
 }

@@ -8,6 +8,7 @@
 // Copyright (c) 2026 CitizenCoder
 //
 
+import AppKit
 import Foundation
 import Observation
 
@@ -70,6 +71,8 @@ final class AppCoordinator {
                 fetched[index].customName = entry.customName
                 fetched[index].symbolName = entry.symbolName
                 fetched[index].accentColorHex = entry.accentColorHex
+                fetched[index].launchAppBundleIDs = entry.launchAppBundleIDs
+                fetched[index].hotkeyShortcut = entry.shortcut
             }
             spaces = fetched.sorted { $0.order < $1.order }
             // Derived from the same fetch rather than a separate `activeSpace()` call: the real
@@ -116,8 +119,30 @@ final class AppCoordinator {
             if previewsEnabled {
                 await thumbnailCache.captureCurrentScreen(for: space)
             }
+            launchConfiguredApps(for: space)
         } catch {
             record(error)
+        }
+    }
+
+    /// Fires and forgets — this is a convenience, never something a switch should be seen to wait
+    /// on or fail over. Only launches an app that isn't already running: the goal is "have my
+    /// tools ready," not repeatedly stealing focus or relaunching something you deliberately quit.
+    private func launchConfiguredApps(for space: DesktopSpace) {
+        guard let bundleIDs = space.launchAppBundleIDs, !bundleIDs.isEmpty else { return }
+        for bundleID in bundleIDs {
+            guard NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty else { continue }
+            guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
+                Log.spaceManager.notice("Launch-on-arrival: no installed app found for \(bundleID, privacy: .public)")
+                continue
+            }
+            Task {
+                do {
+                    try await NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
+                } catch {
+                    Log.spaceManager.notice("Launch-on-arrival failed for \(bundleID, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                }
+            }
         }
     }
 
@@ -169,6 +194,30 @@ final class AppCoordinator {
         await metadataStore.setAccentColor(hex, for: space.identifier.stableKey)
         if let index = spaces.firstIndex(where: { $0.identifier == space.identifier }) {
             spaces[index].accentColorHex = hex
+        }
+    }
+
+    func setSymbol(_ symbolName: String?, for space: DesktopSpace) async {
+        await metadataStore.setSymbolName(symbolName, for: space.identifier.stableKey)
+        if let index = spaces.firstIndex(where: { $0.identifier == space.identifier }) {
+            spaces[index].symbolName = symbolName
+        }
+    }
+
+    func setLaunchAppBundleIDs(_ bundleIDs: [String], for space: DesktopSpace) async {
+        await metadataStore.setLaunchAppBundleIDs(bundleIDs, for: space.identifier.stableKey)
+        if let index = spaces.firstIndex(where: { $0.identifier == space.identifier }) {
+            spaces[index].launchAppBundleIDs = bundleIDs.isEmpty ? nil : bundleIDs
+        }
+    }
+
+    /// Nil clears the binding. Callers (`ShortcutsSettingsView`) are responsible for conflict
+    /// checking against both this and the fixed-slot bindings before calling this — see
+    /// `HotkeyCoordinator.conflictingBinding(for:excludingSpace:)`.
+    func setShortcut(_ shortcut: KeyboardShortcut?, for space: DesktopSpace) async {
+        await metadataStore.setShortcut(shortcut, for: space.identifier.stableKey)
+        if let index = spaces.firstIndex(where: { $0.identifier == space.identifier }) {
+            spaces[index].hotkeyShortcut = shortcut
         }
     }
 

@@ -31,6 +31,7 @@ struct AccentColorPicker: View {
                         )
                 }
                 .buttonStyle(.plain)
+                .help("Accent color \(hex)")
                 .accessibilityLabel("Accent color \(hex)")
                 .accessibilityAddTraits(selectedHex == hex ? [.isSelected] : [])
             }

@@ -142,8 +142,13 @@ separate AppleScript backend; the Accessibility backend supersedes it.
 - All Tier 2 operations are wrapped so failures surface as typed `SpaceError` cases, never as silent
   no-ops.
 
-**Tier 3 (experimental, private SkyLight symbols — opt-in, off by default):**
-- Lives entirely behind `ExperimentalSpaceManager`, resolved via `dlopen`/`dlsym` at runtime (never
+**Tier 3 (experimental, private SkyLight symbols — removed):** Built, shipped disabled-by-default, and
+later deleted entirely (2026-09) once its confirmed window-consolidation bug (§ below) made clear it
+wasn't safe to keep around, and the system-shortcut mechanism (Settings → Shortcuts → "Enable for All
+Desktops") already covered its practical goal — flash-free switching — safely. Left here as a record
+of what was tried; `ExperimentalSpaceManager.swift`/`PrivateSpacesAPI.swift`/`PrivateSpacesDiagnostic.swift`
+no longer exist in the codebase.
+- Lived entirely behind `ExperimentalSpaceManager`, resolved via `dlopen`/`dlsym` at runtime (never
   linked at build time against private `.tbd`s), so a failed symbol lookup degrades to "unavailable"
   rather than crashing.
 - Gives silent (no Mission Control flash) switch/create/delete/list and is the only way to approach

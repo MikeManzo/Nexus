@@ -20,12 +20,15 @@ struct MenuBarSettingsView: View {
     var body: some View {
         Form {
             Section("Display") {
-                Picker("Menu bar style", selection: $displayModeRaw) {
+                // A custom radio list, not `.pickerStyle(.radioGroup)` — the built-in style only
+                // lets each row show a plain label, with no way to attach the live preview beside
+                // it, which was the whole point of replacing it (that empty space to the right of
+                // the options was otherwise unused).
+                VStack(alignment: .leading, spacing: 10) {
                     ForEach(MenuBarDisplayMode.allCases) { mode in
-                        Text(mode.label).tag(mode.rawValue)
+                        modeRow(mode)
                     }
                 }
-                .pickerStyle(.radioGroup)
             }
 
             Section("Quick Switcher") {
@@ -62,5 +65,51 @@ struct MenuBarSettingsView: View {
         }
         .formStyle(.grouped)
         .onAppear { coordinator.screenRecordingPermission.refresh() }
+    }
+
+    private func modeRow(_ mode: MenuBarDisplayMode) -> some View {
+        let isSelected = displayModeRaw == mode.rawValue
+        return Button {
+            displayModeRaw = mode.rawValue
+        } label: {
+            HStack {
+                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                    .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                Text(mode.label)
+                Spacer()
+                previewStrip(for: mode)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// A small mocked-up menu bar chip showing exactly what this mode renders — matching
+    /// `StatusItemController.updateAppearance()`'s own logic (same dot/accent color, same
+    /// truncated name, same fallbacks) — using the real active desktop when there is one, so this
+    /// isn't just a generic mockup but an actual live preview.
+    private func previewStrip(for mode: MenuBarDisplayMode) -> some View {
+        let name = coordinator.activeSpace?.displayName ?? "General"
+        let color = coordinator.activeSpace?.accentColor ?? Color.accentColor
+        let number = (coordinator.activeSpace?.order ?? 0) + 1
+
+        return HStack(spacing: 5) {
+            switch mode {
+            case .name:
+                Circle().fill(color).frame(width: 7, height: 7)
+                Text(name).font(.caption.weight(.semibold)).lineLimit(1)
+            case .icon:
+                Image(systemName: "rectangle.3.group").font(.system(size: 12))
+            case .number:
+                Text("\(number)").font(.caption.weight(.semibold))
+            case .letter:
+                Text(name.first.map(String.init) ?? "–").font(.caption.weight(.semibold))
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 5))
+        .fixedSize()
     }
 }

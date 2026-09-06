@@ -62,6 +62,10 @@ struct ShortcutsSettingsView: View {
                 Text("Shortcuts work even when Nexus isn't the active app.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                Text("Want a shortcut for a specific desktop by name instead of its position? Set that from Manage Desktops → Customize… — it follows the desktop even if you reorder or rename it.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Flash-Free Switching") {

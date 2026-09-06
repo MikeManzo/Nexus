@@ -91,10 +91,7 @@ enum SpaceReconciler {
     // found again after quitting and relaunching Nexus, even though that file itself persists
     // correctly. Persisting the last reconciled snapshot here and loading it as `previous` for a
     // backend's first call after launch lets rule 2/3 (label/order matching) recover the same
-    // stableKeys, so metadata lookups keep hitting. Both `AccessibilitySpaceManager` and
-    // `ExperimentalSpaceManager` share this one file ; reconciliation only ever matches by
-    // label/order/token regardless of which backend wrote it, so this is safe even if the user
-    // switches backends between launches.
+    // stableKeys, so metadata lookups keep hitting.
 
     static func loadSnapshot() -> [DesktopSpace] {
         guard let data = try? Data(contentsOf: snapshotURL()),

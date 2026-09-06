@@ -75,6 +75,7 @@ struct LandingZoneView: View {
         }
         .frame(minWidth: 90)
         .frame(height: Self.menuBarHeight)
+        .help("Hover to see and switch between all your desktops")
     }
 
     private var grid: some View {

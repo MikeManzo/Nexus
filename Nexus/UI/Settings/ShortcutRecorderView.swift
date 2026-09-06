@@ -15,7 +15,10 @@ import SwiftUI
 /// without changing anything. Uses a local event monitor scoped to exactly the recording window ;
 /// it never touches global state, unlike `GlobalHotkeyManager`.
 struct ShortcutRecorderView: View {
-    let currentShortcut: KeyboardShortcut
+    /// `nil` means "no shortcut assigned yet" (e.g. a desktop that's never had one bound) —
+    /// distinct from any real `KeyboardShortcut` value, so the idle label reads "None" instead of
+    /// a meaningless placeholder combination.
+    var currentShortcut: KeyboardShortcut?
     let onCapture: (KeyboardShortcut) -> Void
 
     @State private var isRecording = false
@@ -25,10 +28,11 @@ struct ShortcutRecorderView: View {
         Button {
             isRecording ? stopRecording() : startRecording()
         } label: {
-            Text(isRecording ? "Press keys…" : currentShortcut.displayString)
+            Text(isRecording ? "Press keys…" : (currentShortcut?.displayString ?? "None"))
                 .frame(minWidth: 90)
         }
         .buttonStyle(.bordered)
+        .help(isRecording ? "Press a key combination, or Escape to cancel" : "Click, then press a key combination")
         .onDisappear { stopRecording() }
     }
 
