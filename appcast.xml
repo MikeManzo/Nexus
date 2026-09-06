@@ -4,14 +4,14 @@
         <title>Nexus</title>
         <item>
             <title>1.0</title>
-            <pubDate>Sun, 06 Sep 2026 13:11:19 -0400</pubDate>
+            <pubDate>Sun, 06 Sep 2026 13:39:26 -0400</pubDate>
             <sparkle:version>1</sparkle:version>
             <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <description><![CDATA[<ul>
-<li>Initial release</li>
+<li>Fixed accessability permission corner case</li>
 </ul>]]></description>
-            <enclosure url="https://github.com/MikeManzo/Nexus/releases/download/v1.0.0/Nexus.dmg" length="2467632" type="application/octet-stream" sparkle:edSignature="HulS1cYRpjh29SSz/53jElLas5khJgTnButYAlSMA2SMi+vcoSBC6oQ8ni+NSUv03Y4WAieD0CoHg9qLGoXyDw=="/>
+            <enclosure url="https://github.com/MikeManzo/Nexus/releases/download/v1.0.1/Nexus.dmg" length="2474949" type="application/octet-stream" sparkle:edSignature="a+BuYPzZl8u2gvlXN2zRs0DnV3zt5zwNUpLfy+7vHmaRJpM7o2X8fS8dg4qqA66kCyPqqYPJSYIVIfokCtCvDg=="/>
         </item>
     </channel>
 </rss>

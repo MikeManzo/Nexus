@@ -48,8 +48,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nexusapp.Nexus
         PRODUCT_NAME: Nexus
-        MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "2"
+        MARKETING_VERSION: "1.0.1"
+        CURRENT_PROJECT_VERSION: "3"
         ENABLE_APP_SANDBOX: NO
         # Without a real, stable identity here, local builds fall back to an ad-hoc signature —
         # confirmed via `codesign -dvvv` (Signature=adhoc) and the TCC daemon's own log ("Failed
