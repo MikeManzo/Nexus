@@ -13,14 +13,14 @@ import ApplicationServices
 import CoreGraphics
 import Foundation
 
-/// Tier 2 groundwork. This is **not yet** a `SpaceManaging` conformer — Apple documents nothing
+/// Tier 2 groundwork. This is **not yet** a `SpaceManaging` conformer ; Apple documents nothing
 /// about Mission Control's accessibility tree, so before writing real enumeration/switch logic
 /// against guessed role and subrole names, this dumps the *actual* tree to a file for inspection.
 /// The real `AccessibilitySpaceManager` gets built against verified structure, once captured.
 ///
 /// Invocation uses `NSWorkspace` to launch `/System/Applications/Mission Control.app`
 /// (bundle id `com.apple.exposelauncher`) rather than synthesizing the Mission Control keyboard
-/// shortcut — a synthesized keystroke would silently do nothing if the user has rebound or
+/// shortcut ; a synthesized keystroke would silently do nothing if the user has rebound or
 /// disabled that shortcut in System Settings; launching the app by bundle id does not depend on
 /// what shortcut, if any, is configured.
 @MainActor
@@ -46,7 +46,7 @@ final class MissionControlAccessibilityService {
     }
 
     /// Harmless, read-only: confirms Nexus can read Dock.app's accessibility tree at all. Does
-    /// not invoke Mission Control and has no visible side effects — safe to run as a routine
+    /// not invoke Mission Control and has no visible side effects ; safe to run as a routine
     /// "Test Accessibility Connection" check, unlike the diagnostic dump below.
     func testConnection() throws -> Bool {
         guard AXIsProcessTrusted() else { throw ServiceError.notTrusted }
@@ -60,7 +60,7 @@ final class MissionControlAccessibilityService {
 
     /// Dumps Dock.app's accessibility tree both before and while Mission Control is presented, to
     /// a timestamped file under `~/Library/Application Support/Nexus/diagnostics/`. Intentionally
-    /// visible and disruptive — a one-shot developer diagnostic triggered from Settings →
+    /// visible and disruptive ; a one-shot developer diagnostic triggered from Settings →
     /// Accessibility, not something end users run routinely.
     func dumpDockAccessibilityTree() async throws -> DumpResult {
         guard AXIsProcessTrusted() else { throw ServiceError.notTrusted }
@@ -90,10 +90,10 @@ final class MissionControlAccessibilityService {
         Nexus Mission Control accessibility diagnostic
         Captured: \(Date().formatted(.iso8601))
 
-        === Dock.app AX tree AT REST (Mission Control not invoked) — \(restCount) elements ===
+        === Dock.app AX tree AT REST (Mission Control not invoked) ; \(restCount) elements ===
         \(restDump)
 
-        === Dock.app AX tree WHILE Mission Control is presented — \(presentedCount) elements ===
+        === Dock.app AX tree WHILE Mission Control is presented ; \(presentedCount) elements ===
         \(presentedDump)
         """
 
@@ -108,8 +108,8 @@ final class MissionControlAccessibilityService {
 
     /// Read-only: drills straight to the Spaces Bar (found in the first diagnostic pass to carry
     /// stable `AXIdentifier`s `mc.spaces.list` / `mc.spaces.add`) and dumps *every* attribute and
-    /// available action on it and its children — not just the fixed handful the general dump
-    /// checks — specifically to find whichever attribute marks the currently active desktop.
+    /// available action on it and its children ; not just the fixed handful the general dump
+    /// checks ; specifically to find whichever attribute marks the currently active desktop.
     /// Performs no `AXPress` or other mutating action.
     func dumpSpacesBarDetail() async throws -> DumpResult {
         guard AXIsProcessTrusted() else { throw ServiceError.notTrusted }

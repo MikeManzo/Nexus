@@ -18,6 +18,9 @@ struct SettingsView: View {
             GeneralSettingsView()
                 .tabItem { Label("General", systemImage: "gearshape") }
 
+            PermissionsSettingsView(coordinator: coordinator)
+                .tabItem { Label("Permissions", systemImage: "lock.shield") }
+
             MenuBarSettingsView(coordinator: coordinator)
                 .tabItem { Label("Menu Bar", systemImage: "menubar.rectangle") }
 

@@ -51,7 +51,7 @@ struct SpaceReconcilerTests {
     func fullScreenSpaceSurvivesReordering() {
         // Realistic labels: plain desktops are always the generic "Desktop N" (N shifts for
         // everything after a deletion); a full-screen space carries the app's actual name, which
-        // doesn't change — so it's the one case label-matching is unambiguous.
+        // doesn't change ; so it's the one case label-matching is unambiguous.
         let first = SpaceReconciler.reconcile(previous: [], observed: [
             SpaceReconciler.Observation(order: 0, systemLabel: "Desktop 1", isActive: true, displayID: nil),
             SpaceReconciler.Observation(order: 1, systemLabel: "Desktop 2", isActive: false, displayID: nil),

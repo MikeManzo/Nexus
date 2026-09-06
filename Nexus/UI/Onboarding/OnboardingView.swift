@@ -35,7 +35,7 @@ struct OnboardingView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("Accessibility access").font(.headline)
-                Text("Switching, creating, and deleting desktops needs Accessibility access — it's the only way an app can control Mission Control, since macOS has no dedicated API for it. Nexus does not log keystrokes or read other apps' content. Renaming and the rest of the app work without this permission.")
+                Text("Switching, creating, and deleting desktops needs Accessibility access ; it's the only way an app can control Mission Control, since macOS has no dedicated API for it. Nexus does not log keystrokes or read other apps' content. Renaming and the rest of the app work without this permission.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
 

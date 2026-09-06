@@ -16,7 +16,7 @@ import Foundation
 /// rather than assumed dictionary keys.
 ///
 /// Deliberately narrow: **only** `spaces()`/`activeSpace()`/`activate(_:)` use the private API.
-/// `createSpace()`/`delete(_:)` delegate to `AccessibilitySpaceManager` — `CGSSpaceCreate` and
+/// `createSpace()`/`delete(_:)` delegate to `AccessibilitySpaceManager` ; `CGSSpaceCreate` and
 /// `CGSSpaceDestroy` exist, but nothing in the community reverse-engineering confirms the full,
 /// correct sequence to attach a newly created space to a display's visible rotation (or safely
 /// detach one before destroying it) without risking a corrupted or orphaned space on a real
@@ -26,12 +26,12 @@ import Foundation
 ///
 /// If the private API is unavailable for any reason (symbol resolution failure, a future macOS
 /// changing this undocumented structure), every method here falls back to the Accessibility
-/// backend automatically rather than throwing — see `docs/01-capability-research.md` §11 on why
+/// backend automatically rather than throwing ; see `docs/01-capability-research.md` §11 on why
 /// this can't be treated as a guaranteed-stable mechanism.
 @MainActor
 final class ExperimentalSpaceManager: SpaceManaging {
     private let fallback: AccessibilitySpaceManager
-    // Seeded from disk rather than starting empty — see `SpaceReconciler`'s "Cross-launch
+    // Seeded from disk rather than starting empty ; see `SpaceReconciler`'s "Cross-launch
     // snapshot" section for why an empty starting point here breaks custom name/color persistence
     // across app relaunches.
     private var lastKnownSpaces: [DesktopSpace] = SpaceReconciler.loadSnapshot()
@@ -77,7 +77,7 @@ final class ExperimentalSpaceManager: SpaceManaging {
         try await fallback.delete(space)
     }
 
-    // MARK: - Private API structure (verified, not assumed — see the diagnostic dump referenced above)
+    // MARK: - Private API structure (verified, not assumed ; see the diagnostic dump referenced above)
 
     private static func readObservations() -> [SpaceReconciler.Observation]? {
         guard PrivateSpacesAPI.isAvailable,

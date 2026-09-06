@@ -12,7 +12,7 @@ import AppKit
 import ApplicationServices
 import Observation
 
-/// Wraps `AXIsProcessTrusted`/`AXIsProcessTrustedWithOptions`. Nothing here polls — permission is
+/// Wraps `AXIsProcessTrusted`/`AXIsProcessTrustedWithOptions`. Nothing here polls ; permission is
 /// re-checked on `refresh()`, called when the app becomes active again (the plausible moment a
 /// user returns from System Settings), never on a timer.
 @MainActor
@@ -33,7 +33,7 @@ final class AccessibilityPermissionManager {
     }
 
     /// Triggers the system's own permission prompt if not yet trusted. Does not loop or re-prompt
-    /// on its own — call this from an explicit user action (a button), never automatically.
+    /// on its own ; call this from an explicit user action (a button), never automatically.
     func requestPermission() {
         // Using the raw key name rather than the `kAXTrustedCheckOptionPrompt` C global sidesteps
         // a Swift 6 strict-concurrency diagnostic on that global's `Unmanaged<CFString>` type;

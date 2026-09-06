@@ -11,11 +11,11 @@
 import AppKit
 import SwiftUI
 
-/// Owns the single floating panel centered in the menu bar — the "quick switcher" the user
+/// Owns the single floating panel centered in the menu bar ; the "quick switcher" the user
 /// hovers to preview and switch desktops. Opt-in (Settings → Menu Bar → "Show quick switcher in
 /// menu bar"), off by default. There is exactly one window here: it grows in place on hover
 /// (`LandingZoneView`) rather than triggering a separate panel elsewhere, so there is no gap
-/// between where the cursor is and what it needs to reach — an earlier design (hover the status
+/// between where the cursor is and what it needs to reach ; an earlier design (hover the status
 /// item on the right, a preview appears centered on screen) didn't work as an interaction:
 /// verified live that crossing real screen distance with nothing under the cursor breaks a hover
 /// gesture, no matter how the dismiss-debounce is tuned.
@@ -67,7 +67,7 @@ final class MenuBarLandingZoneController {
         panel?.orderOut(nil)
     }
 
-    /// Hides for the brief window Mission Control is presented, and restores right after — see
+    /// Hides for the brief window Mission Control is presented, and restores right after ; see
     /// `Notification.Name.missionControlWillPresent`'s doc comment for why this exists at all.
     private func observeMissionControl() {
         let willPresent = NotificationCenter.default.addObserver(
@@ -129,8 +129,8 @@ final class MenuBarLandingZoneController {
         position(panel, size: size)
     }
 
-    /// Pins the *top* edge to the very top of the screen — flush with the menu bar's own top
-    /// edge, not sitting below it — and grows downward from there. The collapsed pill's height is
+    /// Pins the *top* edge to the very top of the screen ; flush with the menu bar's own top
+    /// edge, not sitting below it ; and grows downward from there. The collapsed pill's height is
     /// exactly the menu bar's own thickness (`LandingZoneView.menuBarHeight`), so its content
     /// lands vertically centered against the native menu bar's own items rather than pinned to
     /// the top of the row; the expanded grid then hangs below it like a real dropdown would,
@@ -142,24 +142,37 @@ final class MenuBarLandingZoneController {
         panel.setFrame(NSRect(x: x, y: y, width: size.width, height: size.height), display: true)
     }
 
-    /// `screen.frame.midX` is the screen's true horizontal center — on a notched MacBook that's
+    /// `screen.frame.midX` is the screen's true horizontal center ; on a notched MacBook that's
     /// exactly where the camera housing is, so a panel centered there would sit partly behind it.
     /// `NSScreen.safeAreaInsets.top > 0` is how AppKit signals a notch is present; when it is,
-    /// this centers instead within whichever of `auxiliaryTopLeftArea`/`auxiliaryTopRightArea`
-    /// (the unobscured strips macOS itself defines to the notch's left and right) is wide enough
-    /// to hold the panel, clamped into that strip if the panel doesn't fit.
+    /// this hugs the *inner* edge (the edge touching the notch) of whichever of
+    /// `auxiliaryTopLeftArea`/`auxiliaryTopRightArea` (the unobscured strips macOS itself defines
+    /// to the notch's left and right) is wide enough to hold the panel.
     ///
-    /// Verified against the notch-free 2560×1440 external display this was built and tested on
-    /// (`safeAreaInsets == .zero` there, so this always takes the plain-midpoint path); not yet
-    /// tested on real notched hardware.
+    /// Confirmed live on real notched hardware that centering *within* the whole strip (the
+    /// original approach) isn't good enough: other apps' status items — and macOS's own
+    /// Control Center cluster — already occupy real estate there, and there's no public API to
+    /// learn how much. They dock from the strip's *outer* edge inward (toward Control Center and
+    /// the clock), so hugging the *inner* edge — right against the notch — is the segment least
+    /// likely to already be in use, and happens to be the closest a notched Mac can get to true
+    /// center anyway. Still a heuristic, not a guarantee: a strip crowded enough to reach all the
+    /// way to its inner edge will still collide.
     private func horizontalOrigin(on screen: NSScreen, panelWidth: CGFloat) -> CGFloat {
         guard screen.safeAreaInsets.top > 0 else {
             return screen.frame.midX - panelWidth / 2
         }
-        let sides = [screen.auxiliaryTopRightArea, screen.auxiliaryTopLeftArea].compactMap { $0 }.filter { !$0.isEmpty }
-        guard let side = sides.first(where: { $0.width >= panelWidth }) ?? sides.max(by: { $0.width < $1.width }) else {
+
+        // originX(_:) computes where this strip's *inner* (notch-adjacent) edge puts the panel.
+        let candidates: [(rect: CGRect, originX: (CGFloat) -> CGFloat)] = [
+            screen.auxiliaryTopRightArea.map { rect in (rect, { _ in rect.minX }) },
+            screen.auxiliaryTopLeftArea.map { rect in (rect, { width in rect.maxX - width }) },
+        ].compactMap { $0 }.filter { !$0.rect.isEmpty }
+
+        guard let chosen = candidates.first(where: { $0.rect.width >= panelWidth })
+            ?? candidates.max(by: { $0.rect.width < $1.rect.width })
+        else {
             return screen.frame.midX - panelWidth / 2
         }
-        return panelWidth >= side.width ? side.minX : side.midX - panelWidth / 2
+        return chosen.originX(panelWidth)
     }
 }

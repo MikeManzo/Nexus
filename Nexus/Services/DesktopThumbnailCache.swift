@@ -15,23 +15,23 @@ import ScreenCaptureKit
 
 /// Caches a "last seen" screenshot per desktop, keyed by `SpaceIdentifier.stableKey`. This is
 /// deliberately not a live preview: ScreenCaptureKit only exposes content that's actually
-/// on-screen right now (`SCWindow.isOnScreen` — confirmed in its own header), and an inactive
+/// on-screen right now (`SCWindow.isOnScreen` ; confirmed in its own header), and an inactive
 /// Space by definition isn't composited anywhere, so there is no public API that can return real
 /// pixel content for a desktop you aren't currently looking at. See
 /// `docs/01-capability-research.md` for the same capability-boundary pattern applied elsewhere
 /// (Space rename, Space enumeration).
 ///
 /// `AppCoordinator.activate` captures the desktop being left just before switching away from it,
-/// and the destination desktop again just after arriving — so every tile's thumbnail is exactly
+/// and the destination desktop again just after arriving ; so every tile's thumbnail is exactly
 /// as fresh as the last time you were looking at that desktop, never fresher.
 ///
 /// Requires Screen Recording permission (`ScreenRecordingPermissionManager`). Capturing silently
-/// no-ops without it — this is a cosmetic enhancement, never a blocking requirement, and never
+/// no-ops without it ; this is a cosmetic enhancement, never a blocking requirement, and never
 /// prompts on its own.
 @MainActor
 @Observable
 final class DesktopThumbnailCache {
-    /// Settings → Menu Bar → "Show last-seen previews in quick switcher" — off by default, since
+    /// Settings → Menu Bar → "Show last-seen previews in quick switcher" ; off by default, since
     /// turning it on means asking for Screen Recording access. `AppCoordinator` checks this before
     /// ever calling `captureCurrentScreen`, so nothing here captures anything until the user opts in.
     static let enabledDefaultsKey = "desktopPreviewsEnabled"

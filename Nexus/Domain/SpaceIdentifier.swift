@@ -13,7 +13,7 @@ import Foundation
 /// Identity for a `DesktopSpace`.
 ///
 /// `systemToken` is a best-effort hint from whichever backend produced it (Accessibility label,
-/// or — if the experimental backend is enabled — a private-API space id). It is not guaranteed
+/// or ; if the experimental backend is enabled ; a private-API space id). It is not guaranteed
 /// stable across reboot, logout, or an OS upgrade; see `docs/01-capability-research.md` §11.
 /// `stableKey` is generated and persisted by Nexus itself and is what `SpaceMetadata` is keyed on,
 /// so a custom name survives even when `systemToken` churns.

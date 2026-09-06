@@ -65,7 +65,7 @@ struct ShortcutsSettingsView: View {
             }
 
             Section("Flash-Free Switching") {
-                Text("Assigns macOS's own built-in \"Switch to Desktop N\" shortcut (Control+1, Control+2, …) for your first \(SystemShortcutConfigurator.maxSupportedDesktops) desktops, so switching never flashes Mission Control — the same mechanism you set up manually for Desktop 1, applied to the rest. Never overwrites a shortcut already in use for something else. Once enabled, new desktops you create get one automatically.")
+                Text("Assigns macOS's own built-in \"Switch to Desktop N\" shortcut (Control+1, Control+2, …) for your first \(SystemShortcutConfigurator.maxSupportedDesktops) desktops, so switching never flashes Mission Control ; the same mechanism you set up manually for Desktop 1, applied to the rest. Never overwrites a shortcut already in use for something else. Once enabled, new desktops you create get one automatically.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

@@ -12,7 +12,7 @@ import Foundation
 
 /// The fixed set of actions Nexus can bind a global shortcut to. Desktop switching is by
 /// numbered slot (order index), matching the ⌘1…⌘9 shown in the popover, rather than by a named
-/// space — binding a shortcut to "whatever Space is currently in slot 3" is simpler to reason
+/// space ; binding a shortcut to "whatever Space is currently in slot 3" is simpler to reason
 /// about than tracking a shortcut through renames and reordering, and matches how the popover
 /// already presents desktops.
 enum HotkeyAction: String, Codable, CaseIterable, Sendable {

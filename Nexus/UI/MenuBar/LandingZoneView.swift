@@ -11,8 +11,8 @@
 import AppKit
 import SwiftUI
 
-/// The landing zone's content: a small pill showing the active desktop, which grows in place —
-/// same window, same view, no travel distance — to reveal the tile grid on hover. Collapses back
+/// The landing zone's content: a small pill showing the active desktop, which grows in place ;
+/// same window, same view, no travel distance ; to reveal the tile grid on hover. Collapses back
 /// after a short debounce once the cursor truly leaves (the *current*, possibly-expanded) bounds.
 struct LandingZoneView: View {
     let coordinator: AppCoordinator
@@ -21,11 +21,11 @@ struct LandingZoneView: View {
     @State private var isExpanded = false
     @State private var collapseWorkItem: DispatchWorkItem?
 
-    /// The real, current system menu bar height for the primary screen — not a guessed constant.
+    /// The real, current system menu bar height for the primary screen ; not a guessed constant.
     /// `NSStatusBar.system.thickness` (the nominal status-item content height) is *not* this: on
     /// this very Mac it reports 22pt while the actual menu bar band is 31pt, which is exactly
     /// enough to make a pill sized to `.thickness` look pinned to the top of the row instead of
-    /// centered in it — confirmed by directly comparing the two live. The gap between a screen's
+    /// centered in it ; confirmed by directly comparing the two live. The gap between a screen's
     /// full frame and its `visibleFrame` (which macOS itself carves the menu bar out of) is the
     /// real number.
     private static var menuBarHeight: CGFloat {
@@ -34,7 +34,7 @@ struct LandingZoneView: View {
     }
 
     var body: some View {
-        // `.center`, not `.leading` — the pill is narrower than the grid, so once expanded widens
+        // `.center`, not `.leading` ; the pill is narrower than the grid, so once expanded widens
         // the panel to the grid's 260pt width, a leading alignment pins the desktop name to the
         // left edge instead of centering it in the now-wider window.
         VStack(alignment: .center, spacing: 0) {

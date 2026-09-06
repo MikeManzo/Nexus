@@ -27,7 +27,7 @@ struct ExperimentalSettingsView: View {
                 Label("Confirmed broken as of this build", systemImage: "exclamationmark.triangle.fill")
                     .font(.callout.bold())
                     .foregroundStyle(.red)
-                Text("Live testing surfaced a real bug, not a theoretical risk: switching between desktops through this backend caused windows from multiple desktops to consolidate onto one, confusing which app was on which desktop. Nothing was deleted, but this is not safe to use day-to-day. It's kept here, off by default, as a foundation for figuring out the correct call sequence Apple's own Mission Control performs (which this doesn't yet replicate) — see docs/01-capability-research.md.")
+                Text("Live testing surfaced a real bug, not a theoretical risk: switching between desktops through this backend caused windows from multiple desktops to consolidate onto one, confusing which app was on which desktop. Nothing was deleted, but this is not safe to use day-to-day. It's kept here, off by default, as a foundation for figuring out the correct call sequence Apple's own Mission Control performs (which this doesn't yet replicate) ; see docs/01-capability-research.md.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
 

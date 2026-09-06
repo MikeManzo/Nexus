@@ -23,7 +23,7 @@ struct AccessibilitySettingsView: View {
             Section("Permission") {
                 statusRow
 
-                Text("Nexus uses Accessibility access to read and control Mission Control — switching, creating, and deleting desktops. It does not log keystrokes, read other apps' content, or send anything over the network. Renaming and the rest of the app work without this permission.")
+                Text("Nexus uses Accessibility access to read and control Mission Control ; switching, creating, and deleting desktops. It does not log keystrokes, read other apps' content, or send anything over the network. Renaming and the rest of the app work without this permission.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
 
@@ -53,7 +53,7 @@ struct AccessibilitySettingsView: View {
             }
 
             Section("Developer Diagnostics") {
-                Text("Briefly opens Mission Control to capture its accessibility structure — this is groundwork for building real desktop switching, not something you need to run day to day.")
+                Text("Briefly opens Mission Control to capture its accessibility structure ; this is groundwork for building real desktop switching, not something you need to run day to day.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -91,7 +91,7 @@ struct AccessibilitySettingsView: View {
     private func runConnectionTest() {
         do {
             let ok = try coordinator.missionControlDiagnostics.testConnection()
-            connectionTestStatus = ok ? "Connected — Nexus can read Dock.app's accessibility tree." : "Unexpected response from Dock.app."
+            connectionTestStatus = ok ? "Connected ; Nexus can read Dock.app's accessibility tree." : "Unexpected response from Dock.app."
         } catch {
             connectionTestStatus = "Failed: \(error.localizedDescription)"
         }

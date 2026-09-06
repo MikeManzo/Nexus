@@ -13,14 +13,14 @@ import Carbon.HIToolbox
 import Foundation
 
 /// Writes and applies macOS's own "Switch to Desktop N" shortcuts (`com.apple.symbolichotkeys`,
-/// ids 118+, per-slot — see `SymbolicHotkeyLookup`) on the user's behalf, so every desktop gets
+/// ids 118+, per-slot ; see `SymbolicHotkeyLookup`) on the user's behalf, so every desktop gets
 /// the same flash-free switch path `AccessibilitySpaceManager.activate(_:)` already knows how to
-/// use — without touching the private WindowServer Spaces API that corrupted window assignments
+/// use ; without touching the private WindowServer Spaces API that corrupted window assignments
 /// during Tier 3 testing.
 ///
 /// Verified live on this machine, not assumed: writing the plist entry via `CFPreferences` and
 /// then running Apple's own `activateSettings -u` utility (from
-/// `SystemAdministration.framework`, itself private/undocumented but far lower-risk — it only
+/// `SystemAdministration.framework`, itself private/undocumented but far lower-risk ; it only
 /// asks the system to re-read a standard preferences file, the same thing System Settings itself
 /// does when you check a shortcut's box) applies the change instantly, confirmed by successfully
 /// switching via the newly-enabled shortcut immediately after.
@@ -40,13 +40,13 @@ enum SystemShortcutConfigurator {
 
     /// macOS caps Mission Control at 16 desktop spaces total, but "Switch to Desktop N" only has
     /// an obvious single-key default (Control+1…9, matching System Settings' own disabled
-    /// template) for the first 9 — beyond that there's no natural one-key binding to assign
+    /// template) for the first 9 ; beyond that there's no natural one-key binding to assign
     /// without inventing a scheme Apple's own UI doesn't use, so this stops there rather than
     /// guess. Desktops 10+ still work fine, just via the standard Accessibility flash.
     static let maxSupportedDesktops = 9
 
     /// Whether the user has opted into flash-free switching via "Enable for All Desktops" (and
-    /// hasn't since turned it off) — checked by `AppCoordinator.createSpace()` to decide whether
+    /// hasn't since turned it off) ; checked by `AppCoordinator.createSpace()` to decide whether
     /// newly created desktops should get a shortcut automatically, without the user having to
     /// revisit Settings each time.
     static var isEnabled: Bool {
@@ -79,7 +79,7 @@ enum SystemShortcutConfigurator {
         let hotkeyID = "\(118 + slot)"
 
         if let existing = hotkeys[hotkeyID] as? [String: Any], (existing["enabled"] as? NSNumber)?.boolValue == true {
-            return false // already configured, by the user or by us — leave it alone
+            return false // already configured, by the user or by us ; leave it alone
         }
 
         hotkeys[hotkeyID] = [

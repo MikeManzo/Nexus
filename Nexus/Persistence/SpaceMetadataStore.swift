@@ -20,7 +20,7 @@ protocol SpaceMetadataStoring: Sendable {
 
 /// JSON-file-backed metadata store, isolated as an actor so concurrent reads/writes from the
 /// popover and the Space Manager window can never race. Not tied to any particular
-/// `SpaceManaging` backend — it only ever sees `stableKey`, which is generated locally.
+/// `SpaceManaging` backend ; it only ever sees `stableKey`, which is generated locally.
 actor SpaceMetadataStore: SpaceMetadataStoring {
     private var storage: [UUID: SpaceMetadata]
     private let fileURL: URL

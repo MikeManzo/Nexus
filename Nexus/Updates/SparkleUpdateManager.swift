@@ -15,7 +15,7 @@ import Sparkle
 /// The only file in Nexus that imports Sparkle. Everything else depends on `UpdateManaging`.
 ///
 /// Uses `SPUStandardUpdaterController` (Sparkle's own standard UI: update-available dialogs,
-/// permission prompts, progress) rather than a custom user-driver — per the spec's "use Sparkle's
+/// permission prompts, progress) rather than a custom user-driver ; per the spec's "use Sparkle's
 /// established update experience" requirement. `automaticallyChecksForUpdates` and
 /// `automaticallyDownloadsUpdates` forward directly to `SPUUpdater`, which persists them itself;
 /// Nexus does not duplicate that storage.
@@ -23,7 +23,7 @@ import Sparkle
 @Observable
 final class SparkleUpdateManager: NSObject, UpdateManaging {
     // Implicitly-unwrapped: Sparkle's delegate must be supplied at init time, which means `self`
-    // has to be fully valid first — so `super.init()` runs before `controller` is assigned.
+    // has to be fully valid first ; so `super.init()` runs before `controller` is assigned.
     // Optional-typed stored properties don't block that definite-initialization check.
     private var controller: SPUStandardUpdaterController!
     private(set) var lastUpdateCheckDate: Date?

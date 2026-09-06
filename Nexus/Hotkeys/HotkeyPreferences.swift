@@ -17,7 +17,7 @@ struct HotkeyBinding: Codable, Sendable, Equatable {
 }
 
 enum HotkeyDefaults {
-    /// ⌃⌥⌘S open, ⌃⌥⌘N create, ⌃⌥⌘1…9 switch — matching the examples in the product spec.
+    /// ⌃⌥⌘S open, ⌃⌥⌘N create, ⌃⌥⌘1…9 switch ; matching the examples in the product spec.
     static func makeDefaults() -> [HotkeyAction: HotkeyBinding] {
         var result: [HotkeyAction: HotkeyBinding] = [
             .openNexus: HotkeyBinding(shortcut: KeyboardShortcut(keyCode: UInt32(kVK_ANSI_S), modifiers: defaultModifiers), isEnabled: true),

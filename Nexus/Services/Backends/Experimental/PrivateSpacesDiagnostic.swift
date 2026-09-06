@@ -10,7 +10,7 @@
 
 import Foundation
 
-/// Read-only inspection of what `CGSCopyManagedDisplaySpaces` actually returns on this machine —
+/// Read-only inspection of what `CGSCopyManagedDisplaySpaces` actually returns on this machine ;
 /// no mutation, cannot affect any real desktop. Its dictionary structure isn't declared in any
 /// header (it's a runtime value), so this dumps the real thing via `CFCopyDescription` instead of
 /// writing parsing logic against assumed key names.

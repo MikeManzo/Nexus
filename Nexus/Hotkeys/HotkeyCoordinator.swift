@@ -45,7 +45,7 @@ final class HotkeyCoordinator {
     }
 
     /// Returns `false` (and makes no change) if `shortcut` is already bound to a different
-    /// *enabled* action — callers should surface `conflictingAction(for:excluding:)` to the user
+    /// *enabled* action ; callers should surface `conflictingAction(for:excluding:)` to the user
     /// rather than silently overwriting it.
     @discardableResult
     func setShortcut(_ shortcut: KeyboardShortcut, for action: HotkeyAction) -> Bool {

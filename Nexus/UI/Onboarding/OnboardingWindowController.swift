@@ -13,7 +13,7 @@ import SwiftUI
 
 /// A plain `NSWindow` rather than a SwiftUI `Window` scene: it needs to be shown from
 /// `AppDelegate` at launch, before any SwiftUI view exists to supply an `openWindow` environment
-/// action — the same reason `StatusItemController` hosts the popover's SwiftUI content in an
+/// action ; the same reason `StatusItemController` hosts the popover's SwiftUI content in an
 /// `NSHostingController` instead.
 @MainActor
 final class OnboardingWindowController: NSWindowController {

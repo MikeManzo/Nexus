@@ -10,8 +10,8 @@
 
 import AppKit
 
-/// Wraps the one public Spaces signal macOS provides —
-/// `NSWorkspace.activeSpaceDidChangeNotification` — which carries no identity, count, or name
+/// Wraps the one public Spaces signal macOS provides ;
+/// `NSWorkspace.activeSpaceDidChangeNotification` ; which carries no identity, count, or name
 /// (`docs/01-capability-research.md` §2). It exists only to *log* that an external change
 /// happened, not to trigger a live re-read: the only way to actually re-read state through the
 /// Tier 2 backend is to briefly present Mission Control, and doing that automatically on every

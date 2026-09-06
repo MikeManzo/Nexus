@@ -14,10 +14,10 @@ import Foundation
 /// snapshot.
 ///
 /// Strategy, in order:
-/// 1. Match by `systemToken`, when both sides have one — a genuine persistent identifier
+/// 1. Match by `systemToken`, when both sides have one ; a genuine persistent identifier
 ///    (`ManagedSpaceID`, only available from the Tier 3 private-API backend; Accessibility
-///    exposes nothing this stable — see `docs/01-capability-research.md` §11).
-/// 2. Match by identical `systemLabel` text — a full-screen app's stable name, or a generic
+///    exposes nothing this stable ; see `docs/01-capability-research.md` §11).
+/// 2. Match by identical `systemLabel` text ; a full-screen app's stable name, or a generic
 ///    "Desktop N" whose N shifts for every space after one that gets deleted, so this is a weaker
 ///    signal than a token match but stronger than raw position.
 /// 3. Match by identical order position.
@@ -86,13 +86,13 @@ enum SpaceReconciler {
 
     // Without this, `previous` is always `[]` on the very first `reconcile` call after a fresh
     // launch (both backends' `lastKnownSpaces` start empty), so every space falls through to the
-    // "newly created" branch above and gets a brand-new random `stableKey` — meaning
+    // "newly created" branch above and gets a brand-new random `stableKey` ; meaning
     // `SpaceMetadataStore`'s saved names/colors, keyed by the *old* stableKey, would never be
     // found again after quitting and relaunching Nexus, even though that file itself persists
     // correctly. Persisting the last reconciled snapshot here and loading it as `previous` for a
     // backend's first call after launch lets rule 2/3 (label/order matching) recover the same
     // stableKeys, so metadata lookups keep hitting. Both `AccessibilitySpaceManager` and
-    // `ExperimentalSpaceManager` share this one file — reconciliation only ever matches by
+    // `ExperimentalSpaceManager` share this one file ; reconciliation only ever matches by
     // label/order/token regardless of which backend wrote it, so this is safe even if the user
     // switches backends between launches.
 

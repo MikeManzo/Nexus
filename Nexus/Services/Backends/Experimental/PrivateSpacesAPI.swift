@@ -11,15 +11,15 @@
 import CoreGraphics
 import Foundation
 
-/// Resolves private SkyLight/CoreGraphics Spaces symbols via `dlopen`/`dlsym` at runtime — never
+/// Resolves private SkyLight/CoreGraphics Spaces symbols via `dlopen`/`dlsym` at runtime ; never
 /// linked at build time, so a failed lookup degrades to "unavailable" rather than blocking a
 /// build or crashing. These are undocumented, unsupported by Apple, and have broken across macOS
-/// updates before (`docs/01-capability-research.md` §2, §11 — yabai's space-switching broke on
+/// updates before (`docs/01-capability-research.md` §2, §11 ; yabai's space-switching broke on
 /// both the Sonoma 14.0 and Sequoia 15.1.1/15.4 updates). This is the foundation of the opt-in
 /// Tier 3 `ExperimentalSpaceManager`; nothing here is used unless the user explicitly enables it.
 ///
 /// Signatures verified against the community-maintained, MIT-licensed `NUIKit/CGSInternal`
-/// headers (`CGSConnectionID` = `int`, `CGSSpaceID` = `size_t`) — not guessed. The *dictionary
+/// headers (`CGSConnectionID` = `int`, `CGSSpaceID` = `size_t`) ; not guessed. The *dictionary
 /// structure* `CGSCopyManagedDisplaySpaces` returns is not declared anywhere (it's a runtime
 /// value, not a C type), so it is not assumed here; `PrivateSpacesDiagnostic` dumps it for
 /// inspection before any parsing logic gets written against it.
@@ -58,7 +58,7 @@ enum PrivateSpacesAPI {
         mainConnectionID?()
     }
 
-    /// Array of per-display dictionaries; structure not yet parsed here — see
+    /// Array of per-display dictionaries; structure not yet parsed here ; see
     /// `PrivateSpacesDiagnostic`.
     static func managedDisplaySpaces(cid: Int32) -> CFArray? {
         copyManagedDisplaySpaces?(cid)?.takeRetainedValue()

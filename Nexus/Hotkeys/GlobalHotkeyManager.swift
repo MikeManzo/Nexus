@@ -12,8 +12,8 @@ import Carbon.HIToolbox
 import Foundation
 
 /// Wraps Carbon's `RegisterEventHotKey`/`UnregisterEventHotKey`. This is still the standard
-/// mechanism real macOS utilities use for true global hotkeys — confirmed present and fully
-/// declared in the current SDK (`CarbonEvents.h`) — and it has two real advantages over the
+/// mechanism real macOS utilities use for true global hotkeys ; confirmed present and fully
+/// declared in the current SDK (`CarbonEvents.h`) ; and it has two real advantages over the
 /// SwiftUI-native alternative, `NSEvent.addGlobalMonitorForEvents`: it requires no Accessibility
 /// or Input Monitoring permission, and it can be told to consume the keystroke (a monitor can
 /// only observe, never block, so the key would also reach whatever app is frontmost).
@@ -31,7 +31,7 @@ final class GlobalHotkeyManager {
     private var eventHandlerRef: EventHandlerRef?
 
     /// Four-character signature Carbon requires per hot key, to disambiguate registrants sharing
-    /// the same event target. Arbitrary but stable — "nxus".
+    /// the same event target. Arbitrary but stable ; "nxus".
     private static let signature: OSType = {
         "nxus".utf8.reduce(OSType(0)) { ($0 << 8) | OSType($1) }
     }()
@@ -40,7 +40,7 @@ final class GlobalHotkeyManager {
         installEventHandler()
     }
 
-    /// Registers a global hot key. Returns `nil` (and logs) if Carbon refuses the registration —
+    /// Registers a global hot key. Returns `nil` (and logs) if Carbon refuses the registration ;
     /// e.g. another *exclusive* registrant already owns that combination.
     @discardableResult
     func register(_ shortcut: KeyboardShortcut, handler: @escaping () -> Void) -> UInt32? {

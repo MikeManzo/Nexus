@@ -16,15 +16,15 @@ import Foundation
 /// assigned a built-in "Switch to Desktop N" shortcut (System Settings → Keyboard → Keyboard
 /// Shortcuts… → Mission Control). Verified empirically, not guessed: diffing that preferences
 /// file before/after assigning "Switch to Desktop 1" showed it lands at id 118, with "Switch to
-/// Desktop 2"/"3" pre-populated (disabled) at 119/120 — a sequential `118 + (N - 1)` scheme.
+/// Desktop 2"/"3" pre-populated (disabled) at 119/120 ; a sequential `118 + (N - 1)` scheme.
 ///
 /// When one of these is assigned and enabled, triggering it is a genuine system-level space
-/// switch with **no UI presented at all** — the OS does it, not us — because it isn't Nexus
+/// switch with **no UI presented at all** ; the OS does it, not us ; because it isn't Nexus
 /// driving Mission Control, it's the same mechanism as the user pressing that key combo
 /// themselves. That's a strictly better path than `AccessibilitySpaceManager`'s default
 /// Mission-Control-flashing switch, so `activate(_:)` tries this first and only falls back to
 /// the AX-driven approach when a given desktop has no such shortcut configured. These shortcuts
-/// ship *unassigned* by default, so this is opportunistic, not a universal replacement — see
+/// ship *unassigned* by default, so this is opportunistic, not a universal replacement ; see
 /// `docs/01-capability-research.md` §11.
 enum SymbolicHotkeyLookup {
     struct Binding {

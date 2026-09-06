@@ -12,10 +12,10 @@ import AppKit
 import CoreGraphics
 import Observation
 
-/// Wraps `CGPreflightScreenCaptureAccess`/`CGRequestScreenCaptureAccess` — the Screen Recording
+/// Wraps `CGPreflightScreenCaptureAccess`/`CGRequestScreenCaptureAccess` ; the Screen Recording
 /// counterpart to `AccessibilityPermissionManager`. Only needed for `DesktopThumbnailCache`'s
 /// cached desktop previews; nothing else in Nexus touches screen content. Like its Accessibility
-/// counterpart, this never prompts on its own — only from an explicit user action.
+/// counterpart, this never prompts on its own ; only from an explicit user action.
 @MainActor
 @Observable
 final class ScreenRecordingPermissionManager {

@@ -13,7 +13,7 @@ import Carbon.HIToolbox
 import Foundation
 
 /// A key combination in Carbon's `RegisterEventHotKey` terms (virtual key code + the classic
-/// Event Manager modifier mask — not `NSEvent.ModifierFlags`, which uses different bit values).
+/// Event Manager modifier mask ; not `NSEvent.ModifierFlags`, which uses different bit values).
 struct KeyboardShortcut: Codable, Hashable, Sendable {
     var keyCode: UInt32
     var modifiers: UInt32
@@ -45,7 +45,7 @@ struct KeyboardShortcut: Codable, Hashable, Sendable {
     ]
 
     /// Converts from the modifier flags a live key-press event reports (`NSEvent.ModifierFlags`)
-    /// into Carbon's mask — the two use unrelated bit layouts, so this goes through the named
+    /// into Carbon's mask ; the two use unrelated bit layouts, so this goes through the named
     /// `NSEvent.ModifierFlags` members rather than assuming specific bit positions.
     static func carbonModifiers(from nsFlags: NSEvent.ModifierFlags) -> UInt32 {
         var result: UInt32 = 0

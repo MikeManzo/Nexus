@@ -237,12 +237,12 @@ struct PopoverView: View {
     }
 }
 
-/// One tile in the desktop grid — a colored swatch (the desktop's own accent, as a plain fill;
+/// One tile in the desktop grid ; a colored swatch (the desktop's own accent, as a plain fill;
 /// see the body's comment on why not `Glass.tint(_:)`) wrapped in a real Liquid Glass backing for
 /// its translucent depth and interactive press feedback, showing a cached last-seen screenshot on
 /// top when `DesktopThumbnailCache` has one, with a number badge, name below, and a ring around
 /// the active one. The number always sits in a small scrimmed badge (rather than centered) so it
-/// stays legible over a photo, not just a flat color — kept that way even when there's no
+/// stays legible over a photo, not just a flat color ; kept that way even when there's no
 /// thumbnail yet, so tiles don't jump around as previews fill in one by one. Its own view so hover
 /// state can be tracked locally without re-rendering the whole popover on every mouse move. Shared
 /// with `LandingZoneView`'s grid; both wrap their grid of tiles in a `GlassEffectContainer` so the
@@ -260,7 +260,7 @@ struct DesktopTile: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 ZStack(alignment: .topLeading) {
-                    // The desktop's accent color as a plain fill, not `Glass.tint(_:)` — verified
+                    // The desktop's accent color as a plain fill, not `Glass.tint(_:)` ; verified
                     // live that tint doesn't render visibly in this context (an active tile tinted
                     // at 0.9 opacity showed no color at all), so color identity goes through the
                     // one rendering path guaranteed to actually show it. `.glassEffect` below still

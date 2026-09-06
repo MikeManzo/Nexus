@@ -14,10 +14,10 @@ import Foundation
 
 extension Notification.Name {
     /// Posted immediately before Mission Control is invoked, and again once it's been dismissed
-    /// — `MenuBarLandingZoneController` listens for these to hide/restore itself. The landing
+    /// ; `MenuBarLandingZoneController` listens for these to hide/restore itself. The landing
     /// zone panel is pinned to the exact top-of-screen region and floats at `.statusBar` level;
     /// left up while Mission Control tries to present its own Spaces Bar there, it interfered
-    /// with Dock.app's AX tree enough to make `mc.spaces.list` lookups fail — confirmed live, not
+    /// with Dock.app's AX tree enough to make `mc.spaces.list` lookups fail ; confirmed live, not
     /// theoretical.
     static let missionControlWillPresent = Notification.Name("com.nexusapp.Nexus.missionControlWillPresent")
     static let missionControlDidDismiss = Notification.Name("com.nexusapp.Nexus.missionControlDidDismiss")
@@ -25,30 +25,30 @@ extension Notification.Name {
 
 /// Tier 2 `SpaceManaging`: drives Mission Control's accessibility tree. Built against the
 /// verified structure captured by `MissionControlAccessibilityService`'s diagnostic dumps
-/// (`~/Library/Application Support/Nexus/diagnostics/`), not guessed role/subrole names — see
+/// (`~/Library/Application Support/Nexus/diagnostics/`), not guessed role/subrole names ; see
 /// `docs/01-capability-research.md` §2 for what's actually there:
 ///
 /// - Dock.app exposes an `AXGroup` (`AXIdentifier == "mc.spaces.list"`) whose `AXChildren` are
 ///   one `AXButton` per desktop/full-screen space, in visual left-to-right order, and whose
 ///   `AXSelectedChildren` names the currently active one.
 /// - Each of those buttons supports `AXPress` (switch to it, which also dismisses Mission
-///   Control) and — unexpectedly, and better than the hover-then-click-a-close-button approach
-///   most prior art uses — a direct `AXRemoveDesktop` action.
+///   Control) and ; unexpectedly, and better than the hover-then-click-a-close-button approach
+///   most prior art uses ; a direct `AXRemoveDesktop` action.
 /// - A sibling `AXButton` (`AXIdentifier == "mc.spaces.add"`) creates a new desktop on `AXPress`.
 ///
-/// Every operation here briefly presents Mission Control — that flash is expected, not a bug;
+/// Every operation here briefly presents Mission Control ; that flash is expected, not a bug;
 /// there is no way to read or change this state without it (§2, §11).
 ///
 /// **Known untested gap:** `AXHelpers.findElement` returns the *first* match for
 /// `mc.spaces.list`. On a single-display Mac (the only configuration this was built and verified
 /// against) there's exactly one. Whether a multi-display setup with "Displays have separate
-/// Spaces" enabled exposes a separate `Spaces Bar` group per display — which would mean this
-/// silently only ever sees the first one — is unverified; `readObservations` logs a warning when
+/// Spaces" enabled exposes a separate `Spaces Bar` group per display ; which would mean this
+/// silently only ever sees the first one ; is unverified; `readObservations` logs a warning when
 /// more than one display is attached so this doesn't fail invisibly. See
 /// `docs/01-capability-research.md` §12.
 @MainActor
 final class AccessibilitySpaceManager: SpaceManaging {
-    // Seeded from disk rather than starting empty — see `SpaceReconciler`'s "Cross-launch
+    // Seeded from disk rather than starting empty ; see `SpaceReconciler`'s "Cross-launch
     // snapshot" section for why an empty starting point here breaks custom name/color persistence
     // across app relaunches.
     private var lastKnownSpaces: [DesktopSpace] = SpaceReconciler.loadSnapshot()
@@ -68,7 +68,7 @@ final class AccessibilitySpaceManager: SpaceManaging {
 
         // Opportunistic fast path: if the user has assigned macOS's own "Switch to Desktop N"
         // shortcut for this slot, triggering it is a genuine system-level switch with no UI
-        // presented at all — strictly better than driving Mission Control. See
+        // presented at all ; strictly better than driving Mission Control. See
         // `SymbolicHotkeyLookup`. Most desktops won't have one configured (unassigned by
         // default), so this silently falls through to the Mission Control path below.
         if let binding = SymbolicHotkeyLookup.desktopSwitchBinding(forSlot: space.order) {
@@ -79,7 +79,7 @@ final class AccessibilitySpaceManager: SpaceManaging {
         }
 
         // Pressing a desktop's button both switches to it and dismisses Mission Control itself
-        // (its own AXDescription is "exit to Desktop N") — no separate dismiss step needed.
+        // (its own AXDescription is "exit to Desktop N") ; no separate dismiss step needed.
         try await withMissionControlPresented(dismissAfter: false) { axApp in
             guard let spacesList = AXHelpers.findElement(axApp, matchingIdentifier: "mc.spaces.list") else {
                 throw SpaceError.missionControlUnavailable
@@ -122,7 +122,7 @@ final class AccessibilitySpaceManager: SpaceManaging {
             let buttons = self.children(of: spacesList)
             guard buttons.count > 1 else { throw SpaceError.cannotDeleteLastSpace }
             guard space.order < buttons.count else { throw SpaceError.spaceChangedDuringOperation }
-            // No standard kAX constant for this — it only showed up as an available action name
+            // No standard kAX constant for this ; it only showed up as an available action name
             // in the diagnostic dump, specific to Dock.app's Spaces Bar buttons.
             guard AXUIElementPerformAction(buttons[space.order], "AXRemoveDesktop" as CFString) == .success else {
                 throw SpaceError.missionControlUnavailable
@@ -171,7 +171,7 @@ final class AccessibilitySpaceManager: SpaceManaging {
 
     private func readObservations(from axApp: AXUIElement) throws -> [DesktopSpace] {
         if NSScreen.screens.count > 1 {
-            Log.spaceManager.notice("Multiple displays attached; only the first Spaces Bar found is read — untested configuration, see AccessibilitySpaceManager's doc comment")
+            Log.spaceManager.notice("Multiple displays attached; only the first Spaces Bar found is read ; untested configuration, see AccessibilitySpaceManager's doc comment")
         }
 
         guard let spacesList = AXHelpers.findElement(axApp, matchingIdentifier: "mc.spaces.list") else {

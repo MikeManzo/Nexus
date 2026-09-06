@@ -12,7 +12,7 @@ import AppKit
 import SwiftUI
 
 /// Click to record the next key combination (must include at least one modifier). Escape cancels
-/// without changing anything. Uses a local event monitor scoped to exactly the recording window —
+/// without changing anything. Uses a local event monitor scoped to exactly the recording window ;
 /// it never touches global state, unlike `GlobalHotkeyManager`.
 struct ShortcutRecorderView: View {
     let currentShortcut: KeyboardShortcut

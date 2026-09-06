@@ -21,7 +21,7 @@ final class AppCoordinator {
     private(set) var spaces: [DesktopSpace] = []
     private(set) var activeSpaceID: SpaceIdentifier?
     var lastError: SpaceError?
-    /// True while `activate`/`createSpace`/`delete` are in flight — these can take a second or
+    /// True while `activate`/`createSpace`/`delete` are in flight ; these can take a second or
     /// two against the real backend (Mission Control's animation, or a synthesized keystroke's
     /// settle time), so views use this to show that a click registered rather than looking inert.
     private(set) var isBusy = false
@@ -33,7 +33,7 @@ final class AppCoordinator {
     let missionControlDiagnostics: MissionControlAccessibilityService
     let screenRecordingPermission: ScreenRecordingPermissionManager
     let thumbnailCache: DesktopThumbnailCache
-    /// Set by `AppDelegate` once the status item exists — `HotkeyCoordinator` needs an
+    /// Set by `AppDelegate` once the status item exists ; `HotkeyCoordinator` needs an
     /// `openNexus` closure that isn't available until then, so it can't be built in `init`.
     var hotkeyCoordinator: HotkeyCoordinator?
     private let metadataStore: SpaceMetadataStoring
@@ -83,18 +83,18 @@ final class AppCoordinator {
 
     // Every action below updates local state directly from what the backend call already told
     // us, instead of following up with `refresh()`. Against the real (Accessibility-backed)
-    // manager, `refresh()` briefly presents Mission Control — so calling it after an action whose
+    // manager, `refresh()` briefly presents Mission Control ; so calling it after an action whose
     // own backend call already did that (or, for `rename`, never needed to at all) meant every
     // click flashed Mission Control twice. `activate`/`createSpace` are exactly correct this way;
     // `delete` renumbers remaining spaces' `order` locally but their system-derived `systemLabel`
     // can go briefly stale until the next real read (§ cached-first tradeoff also used for popover
-    // opens — see `StatusItemController`/`SystemSpaceObserver`).
+    // opens ; see `StatusItemController`/`SystemSpaceObserver`).
 
     func activate(_ space: DesktopSpace) async {
         isBusy = true
         defer { isBusy = false }
 
-        // "Last seen" thumbnails, not live ones — capture the desktop being left right before we
+        // "Last seen" thumbnails, not live ones ; capture the desktop being left right before we
         // switch away from it (its content won't change again until it's revisited), and the
         // destination again once we've arrived. See `DesktopThumbnailCache`'s doc comment for why
         // this is the best that's possible at all. Both are no-ops when the user hasn't opted in
@@ -131,7 +131,7 @@ final class AppCoordinator {
 
             // If the user has already opted into flash-free switching (Settings → Shortcuts →
             // "Enable for All Desktops"), extend it to newly created desktops automatically too
-            // — otherwise every new desktop would silently fall back to flashing until the user
+            // ; otherwise every new desktop would silently fall back to flashing until the user
             // remembered to revisit Settings and click the button again.
             if SystemShortcutConfigurator.isEnabled {
                 _ = try? SystemShortcutConfigurator.ensureShortcut(forSlot: created.order)

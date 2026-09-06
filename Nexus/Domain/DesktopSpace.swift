@@ -27,7 +27,7 @@ struct DesktopSpace: Identifiable, Hashable, Sendable, Codable {
     var customName: String?
     var symbolName: String?
     /// User-assigned accent color as `#RRGGBB`, or `nil` for the app's default accent. Shown
-    /// consistently as this desktop's identity everywhere it appears — popover, Space Manager,
+    /// consistently as this desktop's identity everywhere it appears ; popover, Space Manager,
     /// and (via `AccentPalette`) in the color picker itself.
     var accentColorHex: String?
 

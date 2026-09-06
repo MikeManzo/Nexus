@@ -41,7 +41,7 @@ struct MenuBarSettingsView: View {
                         if enabled { coordinator.screenRecordingPermission.requestPermission() }
                     }
 
-                Text("Each tile shows a screenshot from the last time you were on that desktop — not a live view, since macOS doesn't render desktops you aren't currently looking at. The screenshot updates every time you switch to or away from a desktop, and never leaves your Mac.")
+                Text("Each tile shows a screenshot from the last time you were on that desktop ; not a live view, since macOS doesn't render desktops you aren't currently looking at. The screenshot updates every time you switch to or away from a desktop, and never leaves your Mac.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

@@ -21,8 +21,8 @@ enum AXHelpers {
     }
 
     /// Depth-first search for a descendant whose `AXIdentifier` equals `target`. Dock.app's
-    /// Mission Control elements carry stable identifiers (`mc.spaces.list`, `mc.spaces.add`) —
-    /// verified via the Phase 4 diagnostic dump — so matching by identifier is used wherever
+    /// Mission Control elements carry stable identifiers (`mc.spaces.list`, `mc.spaces.add`) ;
+    /// verified via the Phase 4 diagnostic dump ; so matching by identifier is used wherever
     /// possible instead of guessing at tree position.
     static func findElement(_ root: AXUIElement, matchingIdentifier target: String, depth: Int = 0, maxDepth: Int = 12) -> AXUIElement? {
         guard depth <= maxDepth else { return nil }
@@ -47,7 +47,7 @@ enum AXHelpers {
         return AXUIElementCreateApplication(dockApp.processIdentifier)
     }
 
-    /// `/System/Applications/Mission Control.app` — launching it by bundle id (rather than
+    /// `/System/Applications/Mission Control.app` ; launching it by bundle id (rather than
     /// synthesizing the Mission Control keyboard shortcut) works regardless of whether the user
     /// has rebound or disabled that shortcut.
     static func missionControlAppURL() -> URL? {
@@ -62,7 +62,7 @@ enum AXHelpers {
 
     /// Posts a synthetic key-down/key-up pair. Used both to dismiss Mission Control and, in
     /// `AccessibilitySpaceManager`, to trigger a user-assigned "Switch to Desktop N" system
-    /// shortcut for a silent switch — see `SymbolicHotkeyLookup`.
+    /// shortcut for a silent switch ; see `SymbolicHotkeyLookup`.
     static func postKeystroke(keyCode: CGKeyCode, flags: CGEventFlags) {
         let source = CGEventSource(stateID: .hidSystemState)
         guard let down = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true),

@@ -10,7 +10,7 @@
 
 import SwiftUI
 
-/// A row of preset color swatches — not a full color well, so every desktop's accent stays
+/// A row of preset color swatches ; not a full color well, so every desktop's accent stays
 /// legible against both the popover's and Space Manager's backgrounds in light and dark mode.
 struct AccentColorPicker: View {
     @Binding var selectedHex: String?
